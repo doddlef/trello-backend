@@ -34,6 +34,14 @@
         LIMIT 1
     </select>
 
+    <select id="findByUID" resultMap="AccountResultMap" parameterType="string">
+        SELECT
+        <include refid="accountColumns"/>
+        FROM accounts
+        WHERE uid = #{uid}
+        LIMIT 1
+    </select>
+
     <insert id="insertAccount">
         INSERT INTO accounts VALUES (
             #{uid},

@@ -1,6 +1,6 @@
 plugins {
-	kotlin("jvm") version "1.9.25"
-	kotlin("plugin.spring") version "1.9.25"
+	kotlin("jvm") version "2.0.0"
+	kotlin("plugin.spring") version "2.0.0"
 	id("org.springframework.boot") version "3.4.6"
 	id("io.spring.dependency-management") version "1.1.7"
 	id("org.asciidoctor.jvm.convert") version "3.3.2"
@@ -28,7 +28,9 @@ repositories {
 extra["snippetsDir"] = file("build/generated-snippets")
 
 dependencies {
-//	implementation("org.springframework.boot:spring-boot-starter-cache")
+	implementation("org.springframework.boot:spring-boot-starter-cache")
+	// https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
+	implementation("com.github.ben-manes.caffeine:caffeine:3.2.0")
 //	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 //	implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 	implementation("org.springframework.boot:spring-boot-starter-security")
@@ -40,8 +42,14 @@ dependencies {
 	implementation("com.github.f4b6a3:ulid-creator:5.2.3")
 	// https://mvnrepository.com/artifact/commons-validator/commons-validator
 	implementation("commons-validator:commons-validator:1.9.0")
+	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
+	implementation("io.jsonwebtoken:jjwt-api:0.12.6")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	developmentOnly("org.springframework.boot:spring-boot-docker-compose")
+	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-impl
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
+	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-jackson
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 	runtimeOnly("org.postgresql:postgresql")
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

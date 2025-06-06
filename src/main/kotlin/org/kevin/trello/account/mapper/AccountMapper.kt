@@ -7,6 +7,7 @@ import org.kevin.trello.account.model.Account
 @Mapper
 interface AccountMapper {
     fun findByEmail(email: String): Account?
+    fun findByUID(uid: String): Account?
     fun insertAccount(query: AccountInsertQuery): Int
 
 //    TEST functions, do not used in production
