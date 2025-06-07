@@ -1,6 +1,7 @@
 package org.kevin.trello.auth.service.impl
 
 import org.kevin.trello.account.mapper.AccountMapper
+import org.kevin.trello.auth.exception.EmailNotVerifiedException
 import org.kevin.trello.auth.model.AccountDetailAdaptor
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
@@ -19,7 +20,8 @@ class CustomUserDetailService(
         if (username.isNullOrBlank()) throw UsernameNotFoundException("email cannot be null or blank")
         val account = accountMapper.findByEmail(username)
 
-        if (account != null) return AccountDetailAdaptor(account)
-        throw UsernameNotFoundException("email $username not found")
+        if (account == null) throw UsernameNotFoundException("email $username not found")
+        if (!account.isEmailVerified) throw EmailNotVerifiedException()
+        return AccountDetailAdaptor(account)
     }
 }

@@ -30,4 +30,13 @@ class AuthAdvice {
             .build()
         return ResponseEntity(response, HttpStatus.UNAUTHORIZED)
     }
+
+    @ExceptionHandler(EmailNotVerifiedException::class)
+    fun handleEmailNotVerifiedException(e: EmailNotVerifiedException): ResponseEntity<ApiResponse> {
+        log.debug("Email not verified {}", e.message)
+        val response = ApiResponse.Builder(ResponseCode.EMAIL_NOT_VERIFIED)
+            .message(e.message ?: "Email not verified")
+            .build()
+        return ResponseEntity(response, HttpStatus.UNAUTHORIZED)
+    }
 }

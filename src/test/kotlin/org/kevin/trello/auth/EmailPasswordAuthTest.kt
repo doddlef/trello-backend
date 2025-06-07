@@ -50,6 +50,7 @@ class EmailPasswordAuthTest @Autowired constructor(
             email = email,
             password = passwordEncoder.encode(password),
             nickname = nickname,
+            isEmailVerified = true,
         ).let {
             val count = accountMapper.insertAccount(it)
             assertEquals(count, 1)
@@ -142,6 +143,7 @@ class EmailPasswordAuthTest @Autowired constructor(
             email = email,
             password = passwordEncoder.encode(password),
             nickname = nickname,
+            isEmailVerified = true,
         ).let {
             val count = accountMapper.insertAccount(it)
             assertEquals(count, 1)
@@ -166,6 +168,53 @@ class EmailPasswordAuthTest @Autowired constructor(
             .andDo(
                 document(
                     "email-password-auth-password-incorrect",
+                    requestFields(
+                        fieldWithPath("email").description("Email address of the user"),
+                        fieldWithPath("password").description("Password of the user")
+                    ),
+                    responseFields(
+                        fieldWithPath("code").description("Response code"),
+                        fieldWithPath("message").description("Response message")
+                    )
+                )
+            )
+    }
+
+    @Test
+    @DisplayName("Login with email and password - email not verified")
+    fun `email not verified`() {
+        val email = "${RandomString(8).nextString()}@example.com"
+        val nickname = "${RandomString(4).nextString()}-user"
+
+        AccountInsertQuery(
+            email = email,
+            password = passwordEncoder.encode(password),
+            nickname = nickname,
+            isEmailVerified = false,
+        ).let {
+            val count = accountMapper.insertAccount(it)
+            assertEquals(count, 1)
+        }
+
+        // start test
+        val loginRequest = """
+            {
+                "email": "$email",
+                "password": "$password"
+            }
+        """.trimIndent()
+
+        mockMvc.perform(
+            post("/api/auth")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(loginRequest)
+        )
+            .andExpect(status().isUnauthorized)
+            .andExpect(jsonPath("$.code").value(ResponseCode.EMAIL_NOT_VERIFIED.code))
+            .andExpect(jsonPath("$.message").isNotEmpty)
+            .andDo(
+                document(
+                    "email-password-auth-email-not-verified",
                     requestFields(
                         fieldWithPath("email").description("Email address of the user"),
                         fieldWithPath("password").description("Password of the user")

@@ -32,4 +32,6 @@ enum class ResponseCode(
      * Bad credentials response code.
      */
     BAD_CREDENTIALS(2002),
+
+    EMAIL_NOT_VERIFIED(2003),
 }
