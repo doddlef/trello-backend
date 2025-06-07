@@ -1,6 +1,6 @@
 package org.kevin.trello.core.exception
 
-class TrelloException: Exception {
+open class TrelloException: Exception {
     constructor() : super()
     constructor(message: String?) : super(message)
     constructor(message: String?, cause: Throwable?) : super(message, cause)

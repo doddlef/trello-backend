@@ -6,9 +6,11 @@ import org.mybatis.spring.SqlSessionFactoryBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.ClassPathResource
+import org.springframework.transaction.annotation.EnableTransactionManagement
 import javax.sql.DataSource
 
 @Configuration
+@EnableTransactionManagement
 class SqlConfig {
 
     @Bean("core-sql-session")

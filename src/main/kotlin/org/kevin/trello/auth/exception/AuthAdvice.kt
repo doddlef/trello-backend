@@ -22,4 +22,12 @@ class AuthAdvice {
             .build()
         return ResponseEntity(response, HttpStatus.UNAUTHORIZED)
     }
+
+    @ExceptionHandler(RefreshTokenExpiredException::class)
+    fun handleRefreshTokenExpiredException(e: RefreshTokenExpiredException): ResponseEntity<ApiResponse> {
+        val response = ApiResponse.Builder(ResponseCode.TOKEN_EXPIRED)
+            .message("refresh token has expired")
+            .build()
+        return ResponseEntity(response, HttpStatus.UNAUTHORIZED)
+    }
 }

@@ -7,9 +7,9 @@ import org.springframework.context.annotation.Configuration
 @ConfigurationProperties(prefix = "auth")
 class AuthProperties {
     var accessCookieName: String = "trello_access_k"
-    var accessTokenLifeMinutes: Int = 60
+    var accessTokenLifeMinutes: Long = 60
     var refreshCookieName: String = "trello_refresh_k"
-    var refreshTokenLifeDays: Int = 7
+    var refreshTokenLifeDays: Long = 7
 
     lateinit var jwtSecret: String
 }

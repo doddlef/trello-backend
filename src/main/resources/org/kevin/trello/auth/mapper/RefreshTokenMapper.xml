@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.kevin.trello.auth.mapper.RefreshTokenMapper">
+    <resultMap id="RefreshTokenResultMap" type="org.kevin.trello.auth.model.RefreshToken">
+        <id property="content" column="content"/>
+        <result property="accountUid" column="account_uid"/>
+        <result property="expireAt" column="expire_at"/>
+    </resultMap>
+
+    <sql id="refreshTokenColumns">
+        content, account_uid, expire_at
+    </sql>
+
+    <insert id="save" parameterType="org.kevin.trello.auth.model.RefreshToken">
+        INSERT INTO refresh_tokens
+        (<include refid="refreshTokenColumns"/>)
+        VALUES (#{content}, #{accountUid}, #{expireAt})
+    </insert>
+
+    <select id="findByContent" parameterType="string" resultMap="RefreshTokenResultMap">
+        SELECT <include refid="refreshTokenColumns"/>
+        FROM refresh_tokens
+        WHERE content = #{content}
+    </select>
+
+    <delete id="deleteByContent" parameterType="string">
+        DELETE FROM refresh_tokens WHERE content = #{content}
+    </delete>
+
+    <delete id="deleteAllExpired">
+        DELETE FROM refresh_tokens WHERE expire_at &lt; NOW()
+    </delete>
+</mapper>

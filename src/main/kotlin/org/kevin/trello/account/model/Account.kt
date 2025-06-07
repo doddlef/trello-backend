@@ -30,4 +30,6 @@ data class Account(
         return """Account(uid='$uid', email='$email', isEmailVerified=$isEmailVerified, nickname='$nickname', 
             |status=$status, role=$role, createdAt=$createdAt, updatedAt=$updatedAt)""".trimMargin()
     }
+
+    fun toBrief() = AccountBrief(this)
 }
