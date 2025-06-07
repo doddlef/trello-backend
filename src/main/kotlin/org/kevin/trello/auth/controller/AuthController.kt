@@ -2,6 +2,7 @@ package org.kevin.trello.auth.controller
 
 import org.kevin.trello.account.model.Account
 import org.kevin.trello.auth.controller.request.EmailLoginRequest
+import org.kevin.trello.auth.model.AccountDetailAdaptor
 import org.kevin.trello.auth.repo.impl.CookieService
 import org.kevin.trello.auth.service.AuthService
 import org.kevin.trello.auth.service.RefreshService
@@ -29,7 +30,7 @@ class AuthController(
 
         SecurityContextHolder.getContext().authentication = authentication
 
-        return generateAuthedResponse(authentication.principal as Account)
+        return generateAuthedResponse((authentication.principal as AccountDetailAdaptor).account)
     }
 
     private fun generateAuthedResponse(account: Account): ResponseEntity<ApiResponse> {

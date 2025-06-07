@@ -1,6 +1,6 @@
 package org.kevin.trello.account
 
-import org.junit.jupiter.api.BeforeEach
+import net.bytebuddy.utility.RandomString
 import org.junit.jupiter.api.Test
 import org.kevin.trello.account.mapper.AccountMapper
 import org.kevin.trello.account.mapper.query.AccountInsertQuery
@@ -19,11 +19,6 @@ class MapperTests {
         this.mapper = mapper
     }
 
-    @BeforeEach
-    fun setUp() {
-        mapper.deleteAll()
-    }
-
     @Test
     fun selectNull() {
         mapper.findByEmail("SELECT NULL EMAIL").let {
@@ -33,7 +28,7 @@ class MapperTests {
 
     @Test
     fun `test insert`() {
-        val email = "NOT EXIST EMAIL"
+        val email = RandomString().nextString()
         val query = AccountInsertQuery(
             email = email,
             nickname = "NOT EXIST NICKNAME",

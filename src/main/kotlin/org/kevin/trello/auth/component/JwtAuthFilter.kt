@@ -62,7 +62,7 @@ class JwtAuthFilter(
                 if (optional != null && jwtUtils.isTokenValid(jwt, optional.uid)) {
                     val adaptor = AccountDetailAdaptor(optional)
                     val authenticationToken = UsernamePasswordAuthenticationToken(
-                        optional,
+                        adaptor,
                         null,
                         adaptor.authorities
                     )
