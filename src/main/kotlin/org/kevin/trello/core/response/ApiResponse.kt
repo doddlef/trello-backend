@@ -15,7 +15,7 @@ class ApiResponse<T>(
     }
 
     companion object {
-        fun <T> success(data: T? = null, message: String? = null): ApiResponse<T> {
+        fun <T> success(message: String? = null, data: T? = null): ApiResponse<T> {
             return ApiResponse(ResponseCode.SUCCESS, message, data)
         }
 
