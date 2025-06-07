@@ -8,23 +8,24 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = ["org.kevin.trello"])
 class CoreAdvice {
     private val log = LoggerFactory.getLogger(this.javaClass)
 
     @ExceptionHandler(Exception::class)
-    fun handleGeneralException(e: Exception): ResponseEntity<ApiResponse<*>> {
+    fun handleGeneralException(e: Exception): ResponseEntity<ApiResponse> {
         log.error("Unexpected error occurred: {}", e.message, e)
-        val response = ApiResponse.error("unexpected error occurred", null)
+        val response = ApiResponse.error()
+            .message("Unexpected error occurred")
+            .build()
         return ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR)
     }
 
-    fun handleBusinessException(e: TrelloException): ResponseEntity<ApiResponse<*>> {
+    fun handleBusinessException(e: TrelloException): ResponseEntity<ApiResponse> {
         log.info("business error occurred: {}", e.message, e)
-        val response = ApiResponse<Any>(
-            responseCode = ResponseCode.BUSINESS_ERROR,
-            message = e.message
-        )
+        val response = ApiResponse.Builder(ResponseCode.BUSINESS_ERROR)
+            .message(e.message ?: "Business error occurred")
+            .build()
         return ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR)
     }
 }

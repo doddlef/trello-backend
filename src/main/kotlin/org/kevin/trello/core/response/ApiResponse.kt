@@ -1,26 +1,35 @@
 package org.kevin.trello.core.response
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import java.io.Serializable
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-class ApiResponse<T>(
-    responseCode: ResponseCode,
-    val message: String? = null,
-    val data: T? = null
-) {
-    val code = responseCode.code
+class ApiResponse private constructor(
+    val code: Int,
+    val message: String?,
+    val data: Map<String, Any>?
+): Serializable {
 
-    override fun toString(): String {
-        return "ApiResponse(message=$message, data=$data, code=$code)"
+    data class Builder(
+        val code: ResponseCode,
+    ) {
+        var message: String? = null
+        var data: MutableMap<String, Any>? = null
+
+        fun message(message: String?) = apply { this.message = message }
+        fun add(data: Pair<String, Any>) = apply {
+            if (this.data == null) {
+                this.data = mutableMapOf()
+            }
+            this.data?.set(data.first, data.second)
+        }
+        fun build() = ApiResponse(code.code, message, data)
     }
 
     companion object {
-        fun <T> success(message: String? = null, data: T? = null): ApiResponse<T> {
-            return ApiResponse(ResponseCode.SUCCESS, message, data)
-        }
+        const val serialVersionUID: Long = 1L
 
-        fun <T> error(message: String? = null, data: T? = null): ApiResponse<T> {
-            return ApiResponse(ResponseCode.ERROR, message, data)
-        }
+        fun success() = Builder(ResponseCode.SUCCESS)
+        fun error() = Builder(ResponseCode.ERROR)
     }
 }

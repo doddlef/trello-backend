@@ -78,7 +78,9 @@ class JwtAuthFilter(
             response.contentType = MediaType.APPLICATION_JSON_VALUE
             response.characterEncoding = "UTF-8"
 
-            val body = ApiResponse<Any>(ResponseCode.TOKEN_EXPIRED, "token expired")
+            val body = ApiResponse.Builder(ResponseCode.TOKEN_EXPIRED)
+                .message("Token expired")
+                .build()
 
             response.writer.write(objectMapper.writeValueAsString(body))
             response.writer.flush()
