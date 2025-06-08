@@ -20,7 +20,7 @@ class AccountController {
         val currentAccount = SecurityUtils.currentAccount()
         if (currentAccount == null) {
             return ResponseEntity(
-                ApiResponse.Builder(ResponseCode.ACCESS_DENIED)
+                ApiResponse.Builder(ResponseCode.NEED_LOGIN)
                     .message("have not logged in")
                     .build(),
                 HttpStatus.UNAUTHORIZED

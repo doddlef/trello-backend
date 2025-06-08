@@ -38,5 +38,13 @@ enum class ResponseCode(
      */
     BAD_CREDENTIALS(2002),
 
+    /**
+     * Email not verified response code.
+     */
     EMAIL_NOT_VERIFIED(2003),
+
+    /**
+     * need to login response code.
+     */
+    NEED_LOGIN(2010),
 }

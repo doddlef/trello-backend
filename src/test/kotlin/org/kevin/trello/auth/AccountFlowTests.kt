@@ -28,7 +28,7 @@ import kotlin.test.assertEquals
 @AutoConfigureRestDocs
 @ExtendWith(RestDocumentationExtension::class)
 @Transactional
-class RefreshAndLogoutTests @Autowired constructor(
+class AccountFlowTests @Autowired constructor(
     val mockMvc: MockMvc,
     val authProperties: AuthProperties,
     val accountMapper: AccountMapper,
@@ -155,5 +155,22 @@ class RefreshAndLogoutTests @Autowired constructor(
                     )
                 )
             )
+    }
+
+    @Test
+    @DisplayName("check account info without login")
+    fun `need login`() {
+        mockMvc.perform(
+            get("/api/account/me")
+        )
+            .andExpect(status().isUnauthorized)
+            .andExpect(jsonPath("$.code").value(ResponseCode.NEED_LOGIN.code))
+            .andDo(document(
+                "check-account-info-unauthorized",
+                responseFields(
+                    fieldWithPath("code").description("Response code"),
+                    fieldWithPath("message").description("Response message")
+                ),
+            ))
     }
 }
