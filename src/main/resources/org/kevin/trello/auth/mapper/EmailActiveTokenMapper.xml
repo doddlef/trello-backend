@@ -16,6 +16,14 @@
         id, token, uid, created_at, expires_at
     </sql>
 
+    <select id="findByUid" resultMap="EmailActiveTokenResultMap">
+        SELECT
+        <include refid="EmailActiveTokenColumns"/>
+        FROM email_active_tokens
+        WHERE uid = #{uid}
+        LIMIT 1
+    </select>
+
     <select id="findByToken" resultMap="EmailActiveTokenResultMap">
         SELECT
         <include refid="EmailActiveTokenColumns"/>

@@ -8,6 +8,7 @@ import org.kevin.trello.auth.model.EmailActiveToken
 interface EmailActiveTokenMapper {
     fun insertToken(query: EmailActiveTokenInsertQuery): Int
     fun findByToken(token: String): EmailActiveToken?
+    fun findByUid(uid: String): EmailActiveToken?
     fun deleteByToken(token: String): Int
     fun deleteAllExpiredTokens(): Int
 

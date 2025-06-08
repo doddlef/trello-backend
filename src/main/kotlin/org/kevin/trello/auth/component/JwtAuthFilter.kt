@@ -73,7 +73,7 @@ class JwtAuthFilter(
 
                 filterChain.doFilter(request, response)
             }
-        } catch (e: ExpiredJwtException) {
+        } catch (_: ExpiredJwtException) {
             response.status = HttpServletResponse.SC_UNAUTHORIZED
             response.contentType = MediaType.APPLICATION_JSON_VALUE
             response.characterEncoding = "UTF-8"
@@ -84,7 +84,7 @@ class JwtAuthFilter(
 
             response.writer.write(objectMapper.writeValueAsString(body))
             response.writer.flush()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             filterChain.doFilter(request, response)
         }
     }

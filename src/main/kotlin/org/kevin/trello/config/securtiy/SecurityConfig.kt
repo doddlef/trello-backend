@@ -18,6 +18,7 @@ val WHITE_LIST = arrayOf(
     "/api/auth/**",
     "/static/**",
     "/assets/**",
+    "/api/account/me",
 )
 
 @Configuration

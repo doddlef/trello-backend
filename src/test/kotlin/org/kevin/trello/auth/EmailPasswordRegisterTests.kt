@@ -15,9 +15,9 @@ import org.springframework.restdocs.RestDocumentationExtension
 import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document
 import org.springframework.restdocs.payload.PayloadDocumentation.*
 import org.springframework.restdocs.cookies.CookieDocumentation.*
+import org.springframework.restdocs.request.RequestDocumentation.*
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.transaction.annotation.Transactional
 
@@ -193,7 +193,7 @@ class EmailPasswordRegisterTests @Autowired constructor(
     }
 
     @Test
-    @Transactional
+    @DisplayName("register with repeated email")
     fun `email already registered`() {
         val email = "${RandomString(8).nextString()}@example.com"
         val nickname = "${RandomString(4).nextString()}-user"
@@ -234,5 +234,48 @@ class EmailPasswordRegisterTests @Autowired constructor(
                     )
                 )
             )
+    }
+
+    @Test
+    fun `resend email`() {
+        val email = "${RandomString(8).nextString()}@example.com"
+        val nickname = "${RandomString(4).nextString()}-user"
+        val password = "Password123!"
+
+        val registerRequest = """
+            {
+                "email": "$email",
+                "nickname": "$nickname",
+                "password": "$password"
+            }
+        """.trimIndent()
+
+        mockMvc.perform(
+            post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registerRequest)
+        )
+
+        mockMvc.perform(
+            get("/api/auth/resend-token")
+                .param("email", email)
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+            .andExpect(jsonPath("$.message").exists())
+            .andDo(
+                document(
+                    "resend-email",
+                    queryParameters(
+                        parameterWithName("email").description("primary email address of the account to resend the verification email to")
+                    ),
+                    responseFields(
+                        fieldWithPath("code").description("Response code"),
+                        fieldWithPath("message").description("Response message"),
+                        fieldWithPath("data.accountUid").description("The account ID of the account")
+                    )
+                )
+            )
+
     }
 }

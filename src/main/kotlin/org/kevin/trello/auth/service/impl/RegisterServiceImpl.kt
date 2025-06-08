@@ -141,8 +141,26 @@ class RegisterServiceImpl(
             ?: throw TrelloException("Failed to find active account for uid: $uid")
     }
 
+    private fun createOrReuse(uid: String): String {
+        val tokenEntity = emailActiveTokenMapper.findByUid(uid)
+        if (tokenEntity != null) return tokenEntity.token
+
+        return createEmailActiveToken(uid)
+    }
+
+    @Transactional
     override fun resendVerificationEmail(email: String): ApiResponse {
-        TODO("Not yet implemented")
+        val account = accountMapper.findByEmail(email)
+            ?: throw BadArgumentException("Email $email is not existed")
+        if (account.isEmailVerified) throw BadArgumentException("Email $email is not existed")
+
+        val token = createOrReuse(account.uid)
+        sendEmailWithToken(email, token)
+
+        return ApiResponse.success()
+            .message("Email verification link has been resent, please check your email.")
+            .add("accountUid" to account.uid)
+            .build()
     }
 
     @Transactional
