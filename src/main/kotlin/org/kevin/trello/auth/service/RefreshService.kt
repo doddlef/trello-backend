@@ -24,7 +24,6 @@ interface RefreshService {
      * Verify the given refresh token.
      *
      * @param token The refresh token to verify.
-     * @param user The account associated with the token.
      * @return The verified refresh token.
      * @throws org.kevin.trello.auth.exception.RefreshTokenExpiredException if the token has expired.
      * @throws org.kevin.trello.auth.exception.InvalidRefreshTokenException if the token is invalid or does not match the user.

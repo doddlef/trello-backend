@@ -9,9 +9,7 @@ interface EmailActiveTokenMapper {
     fun insertToken(query: EmailActiveTokenInsertQuery): Int
     fun findByToken(token: String): EmailActiveToken?
     fun findByUid(uid: String): EmailActiveToken?
+    fun findByEmail(email: String): EmailActiveToken?
     fun deleteByToken(token: String): Int
     fun deleteAllExpiredTokens(): Int
-
-//    Test: only be used in test
-    fun findByEmail(email: String): EmailActiveToken?
 }
