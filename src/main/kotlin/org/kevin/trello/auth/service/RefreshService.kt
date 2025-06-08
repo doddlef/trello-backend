@@ -29,7 +29,16 @@ interface RefreshService {
      * @throws org.kevin.trello.auth.exception.RefreshTokenExpiredException if the token has expired.
      * @throws org.kevin.trello.auth.exception.InvalidRefreshTokenException if the token is invalid or does not match the user.
      */
-    fun verifyToken(token: RefreshToken, user: Account): RefreshToken
+    fun verifyToken(token: RefreshToken): RefreshToken
+
+    fun getAccountByToken(token: RefreshToken): Account
+
+    /**
+     * Delete the given refresh token from the database.
+     *
+     * @param token The refresh token to delete.
+     */
+    fun deleteToken(token: String)
 
     /**
      * Delete all the expired tokens from the database.

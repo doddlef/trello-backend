@@ -1,5 +1,6 @@
 package org.kevin.trello.auth.service.impl
 
+import org.kevin.trello.account.mapper.AccountMapper
 import org.kevin.trello.account.model.Account
 import org.kevin.trello.auth.AuthProperties
 import org.kevin.trello.auth.exception.InvalidRefreshTokenException
@@ -17,6 +18,7 @@ import java.util.UUID
 class RefreshServiceImpl(
     private val refreshTokenMapper: RefreshTokenMapper,
     private val authProperties: AuthProperties,
+    private val accountMapper: AccountMapper,
 ): RefreshService {
     private val log = LoggerFactory.getLogger(this.javaClass)
 
@@ -39,14 +41,21 @@ class RefreshServiceImpl(
     }
 
     override fun verifyToken(
-        token: RefreshToken,
-        user: Account
+        token: RefreshToken
     ): RefreshToken {
         if (token.expireAt.isBefore(LocalDateTime.now()))
             throw RefreshTokenExpiredException()
-        if (token.accountUid != user.uid)
-            throw InvalidRefreshTokenException("Account UID mismatch")
         return token
+    }
+
+    override fun getAccountByToken(token: RefreshToken): Account {
+        return accountMapper.findByUID(token.accountUid)
+            ?: throw InvalidRefreshTokenException("No account found for token: ${token.content}")
+    }
+
+    @Transactional
+    override fun deleteToken(token: String) {
+        refreshTokenMapper.deleteByContent(token)
     }
 
     @Transactional
