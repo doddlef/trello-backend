@@ -21,11 +21,21 @@ class CoreAdvice {
         return ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR)
     }
 
+    @ExceptionHandler(TrelloException::class)
     fun handleBusinessException(e: TrelloException): ResponseEntity<ApiResponse> {
         log.info("business error occurred: {}", e.message, e)
         val response = ApiResponse.Builder(ResponseCode.BUSINESS_ERROR)
             .message(e.message ?: "Business error occurred")
             .build()
         return ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR)
+    }
+
+    @ExceptionHandler(BadArgumentException::class)
+    fun handleBadArgumentException(e: BadArgumentException): ResponseEntity<ApiResponse> {
+        log.debug("bad argument error occurred: {}", e.message, e)
+        val response = ApiResponse.Builder(ResponseCode.BAD_ARGUMENT)
+            .message(e.message ?: "Bad argument error occurred")
+            .build()
+        return ResponseEntity(response, HttpStatus.BAD_REQUEST)
     }
 }

@@ -1,10 +1,11 @@
 package org.kevin.trello.auth.model
 
+import org.kevin.trello.auth.utils.TokenGenerator
 import java.time.LocalDateTime
-import java.util.UUID
 
 data class RefreshToken(
-    val content: String = UUID.randomUUID().toString(),
+    val id: Long = 0L,
+    val content: String = TokenGenerator.generateToken(48),
     val accountUid: String,
     val expireAt: LocalDateTime,
 )

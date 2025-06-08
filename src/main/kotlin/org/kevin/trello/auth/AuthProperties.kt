@@ -12,4 +12,6 @@ class AuthProperties {
     var refreshTokenLifeDays: Long = 7
 
     lateinit var jwtSecret: String
+
+    var emailActiveTokenLifeHours: Long = 24
 }

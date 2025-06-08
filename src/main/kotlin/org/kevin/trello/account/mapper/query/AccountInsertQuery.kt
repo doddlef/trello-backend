@@ -8,6 +8,9 @@ data class AccountInsertQuery(
     val email: String,
     val isEmailVerified: Boolean = false,
     val nickname: String,
+    /**
+     * The password is stored in a hashed format.
+     */
     val password: String? = null,
     val status: UserStatus = UserStatus.ACTIVE,
     val role: UserRole = UserRole.USER,

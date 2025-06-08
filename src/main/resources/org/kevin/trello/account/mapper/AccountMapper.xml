@@ -56,6 +56,19 @@
         )
     </insert>
 
+    <update id="updateByUid">
+        UPDATE accounts
+        <set>
+            <if test="query.email != null">email = #{query.email},</if>
+            <if test="query.isEmailVerified != null">is_email_verified = #{query.isEmailVerified},</if>
+            <if test="query.nickname != null">nickname = #{query.nickname},</if>
+            <if test="query.password != null">password = #{query.password},</if>
+            <if test="query.status != null">status = #{query.status},</if>
+            <if test="query.role != null">role = #{query.role},</if>
+        </set>
+        WHERE uid = #{uid}
+    </update>
+
     <delete id="deleteAll">
         DELETE FROM accounts
     </delete>

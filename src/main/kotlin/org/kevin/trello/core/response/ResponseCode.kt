@@ -19,6 +19,11 @@ enum class ResponseCode(
     BUSINESS_ERROR(1001),
 
     /**
+     * Bad argument response code.
+     */
+    BAD_ARGUMENT(1002),
+
+    /**
      * Access denied response code.
      */
     ACCESS_DENIED(2),
