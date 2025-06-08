@@ -115,4 +115,124 @@ class EmailPasswordRegisterTests @Autowired constructor(
                 )
             )
     }
+
+    @Test
+    @DisplayName("register with invalid email")
+    fun `email invalid`() {
+        val email = "invalid-email"
+        val nickname = "${RandomString(4).nextString()}-user"
+        val password = "Password123!"
+
+        val registerRequest = """
+            {
+                "email": "$email",
+                "nickname": "$nickname",
+                "password": "$password"
+            }
+        """.trimIndent()
+
+        mockMvc.perform(
+            post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registerRequest)
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.code").value(ResponseCode.BAD_ARGUMENT.code))
+            .andDo(
+                document(
+                    "register with invalid email",
+                    requestFields(
+                        fieldWithPath("email").description("primary email address of the account"),
+                        fieldWithPath("password").description("password for the account, at least 8 characters long, contains at least one letter and one number"),
+                        fieldWithPath("nickname").description("nickname for the account, up to 32 characters long")
+                    ),
+                    responseFields(
+                        fieldWithPath("code").description("Response code"),
+                        fieldWithPath("message").description("Response message"),
+                    )
+                )
+            )
+    }
+
+    @Test
+    @DisplayName("register with invalid email")
+    fun `password invalid`() {
+        val email = "${RandomString(8).nextString()}@example.com"
+        val nickname = "${RandomString(4).nextString()}-user"
+        val password = "-"
+
+        val registerRequest = """
+            {
+                "email": "$email",
+                "nickname": "$nickname",
+                "password": "$password"
+            }
+        """.trimIndent()
+
+        mockMvc.perform(
+            post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registerRequest)
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.code").value(ResponseCode.BAD_ARGUMENT.code))
+            .andDo(
+                document(
+                    "register with invalid password",
+                    requestFields(
+                        fieldWithPath("email").description("primary email address of the account"),
+                        fieldWithPath("password").description("password for the account, at least 8 characters long, contains at least one letter and one number"),
+                        fieldWithPath("nickname").description("nickname for the account, up to 32 characters long")
+                    ),
+                    responseFields(
+                        fieldWithPath("code").description("Response code"),
+                        fieldWithPath("message").description("Response message"),
+                    )
+                )
+            )
+    }
+
+    @Test
+    @Transactional
+    fun `email already registered`() {
+        val email = "${RandomString(8).nextString()}@example.com"
+        val nickname = "${RandomString(4).nextString()}-user"
+        val password = "Password123!"
+
+        val registerRequest = """
+            {
+                "email": "$email",
+                "nickname": "$nickname",
+                "password": "$password"
+            }
+        """.trimIndent()
+
+        mockMvc.perform(
+            post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registerRequest)
+        )
+
+        mockMvc.perform(
+            post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registerRequest)
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.code").value(ResponseCode.BAD_ARGUMENT.code))
+            .andDo(
+                document(
+                    "register with already registered email",
+                    requestFields(
+                        fieldWithPath("email").description("primary email address of the account"),
+                        fieldWithPath("password").description("password for the account, at least 8 characters long, contains at least one letter and one number"),
+                        fieldWithPath("nickname").description("nickname for the account, up to 32 characters long")
+                    ),
+                    responseFields(
+                        fieldWithPath("code").description("Response code"),
+                        fieldWithPath("message").description("Response message"),
+                    )
+                )
+            )
+    }
 }
