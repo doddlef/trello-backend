@@ -11,7 +11,8 @@ data class Account(
     val status: UserStatus,
     val role: UserRole,
     val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
+    val updatedAt: LocalDateTime,
+    val avatarUrl: String?,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

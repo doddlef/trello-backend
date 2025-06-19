@@ -20,10 +20,11 @@
         />
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
+        <result property="avatarUrl" column="avatar_url"/>
     </resultMap>
 
     <sql id="accountColumns">
-        uid, email, is_email_verified, nickname, password, status, role, created_at, updated_at
+        uid, email, is_email_verified, nickname, password, status, role, created_at, updated_at, avatar_url
     </sql>
 
     <select id="findByEmail" resultMap="AccountResultMap" parameterType="string">
@@ -52,7 +53,8 @@
             #{status},
             #{role},
             DEFAULT,
-            DEFAULT
+            DEFAULT,
+            #{avatarUrl}
         )
     </insert>
 
@@ -65,6 +67,7 @@
             <if test="query.password != null">password = #{query.password},</if>
             <if test="query.status != null">status = #{query.status},</if>
             <if test="query.role != null">role = #{query.role},</if>
+            <if test="query.avatarUrl != null">avatar_url = #{query.avatarUrl},</if>
         </set>
         WHERE uid = #{uid}
     </update>

@@ -97,7 +97,8 @@ class AccountFlowTests @Autowired constructor(
                         fieldWithPath("data.account.isEmailVerified").description("Whether the email is verified"),
                         fieldWithPath("data.account.nickname").description("Account nickname"),
                         fieldWithPath("data.account.status").description("Account status"),
-                        fieldWithPath("data.account.role").description("Account role")
+                        fieldWithPath("data.account.role").description("Account role"),
+                        fieldWithPath("data.account.avatarUrl").description("Account avatar URL"),
                     )
                 )
             )

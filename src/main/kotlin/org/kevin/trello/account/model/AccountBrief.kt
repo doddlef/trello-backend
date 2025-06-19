@@ -9,6 +9,7 @@ class AccountBrief(
     val nickname: String = account.nickname
     val status: UserStatus = account.status
     val role: UserRole = account.role
+    val avatarUrl: String? = account.avatarUrl
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -24,6 +25,6 @@ class AccountBrief(
     }
 
     override fun toString(): String {
-        return "AccountBrief(uid='$uid', email='$email', isEmailVerified=$isEmailVerified, nickname='$nickname', status=$status, role=$role)"
+        return "AccountBrief(uid='$uid', email='$email', isEmailVerified=$isEmailVerified, nickname='$nickname', status=$status, role=$role, avatarUrl=$avatarUrl)"
     }
 }

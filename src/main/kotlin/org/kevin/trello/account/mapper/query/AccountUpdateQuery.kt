@@ -10,4 +10,5 @@ data class AccountUpdateQuery(
     val password: String? = null,
     val status: UserStatus? = null,
     val role: UserRole? = null,
+    val avatarUrl: String? = null,
 )

@@ -14,6 +14,7 @@ data class AccountInsertQuery(
     val password: String? = null,
     val status: UserStatus = UserStatus.ACTIVE,
     val role: UserRole = UserRole.USER,
+    val avatarUrl: String? = null,
 ) {
     val uid = UlidCreator.getMonotonicUlid().toString()
 }
