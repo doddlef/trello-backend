@@ -30,7 +30,7 @@
         <where>
             bo.uid = #{uid} AND deleted_flag = false
             <if test="boardId != null">
-                AND b.board_id = #{b.boardId}
+                AND b.board_id = #{boardId}
             </if>
             <if test="startWith != null">
                 AND b.name LIKE CONCAT(#{startWith}, '%')
