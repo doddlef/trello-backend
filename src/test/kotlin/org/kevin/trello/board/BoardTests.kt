@@ -126,4 +126,60 @@ class BoardTests @Autowired constructor(
                 )
             )
     }
+
+    @Test
+    @DisplayName("view board list")
+    fun `view board list`() {
+        for (i in 1..5) {
+            val boardName = "test board $i"
+            val requestBody = """
+                {
+                    "name": "$boardName",
+                    "visibility": "PRIVATE"
+                }
+            """.trimIndent()
+
+            mockMvc.perform(
+                post("/api/v1/board")
+                    .cookie(accessCookie)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody)
+            )
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+        }
+
+        mockMvc.perform(
+            get("/api/v1/board")
+                .cookie(accessCookie)
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+            .andExpect(jsonPath("$.data.boards").exists())
+            .andDo(
+                document(
+                    "view-board-list",
+                    requestCookies(
+                        cookieWithName(authProperties.accessCookieName).description("access token cookie")
+                    ),
+                    responseFields(
+                        fieldWithPath("code").description("Response code"),
+                        fieldWithPath("data.boards").description("List of boards"),
+                        fieldWithPath("data.boards[].boardId").description("Board unique identifier"),
+                        fieldWithPath("data.boards[].name").description("Name of the board"),
+                        fieldWithPath("data.boards[].visibility").description("Visibility of the board"),
+                        fieldWithPath("data.boards[].uid").description("user ID"),
+                        fieldWithPath("data.boards[].readOnly").description("Whether the board is read-only"),
+                        fieldWithPath("data.boards[].addedAt").description("Board creation timestamp"),
+                        fieldWithPath("data.boards[].lastOpen").description("Last opened timestamp"),
+                        fieldWithPath("data.boards[].isFavorite").description("Whether the board is marked as favorite"),
+                        fieldWithPath("data.hasNext").description("Whether there are more boards to fetch"),
+                        fieldWithPath("data.hasPrevious").description("Whether there are previous boards to fetch"),
+                        fieldWithPath("data.total").description("Total number of boards available"),
+                        fieldWithPath("data.offset").description("Current offset for pagination"),
+                        fieldWithPath("data.limit").description("Number of boards returned in this response"),
+                    )
+                )
+            )
+    }
 }

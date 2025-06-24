@@ -45,6 +45,8 @@ dependencies {
 	implementation("commons-validator:commons-validator:1.9.0")
 	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
 	implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+// https://mvnrepository.com/artifact/com.github.pagehelper/pagehelper-spring-boot-starter
+	implementation("com.github.pagehelper:pagehelper-spring-boot-starter:2.1.1")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	developmentOnly("org.springframework.boot:spring-boot-docker-compose")
 	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-impl
