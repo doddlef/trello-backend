@@ -222,7 +222,8 @@ class EmailPasswordAuthTest @Autowired constructor(
                     ),
                     responseFields(
                         fieldWithPath("code").description("Response code"),
-                        fieldWithPath("message").description("Response message")
+                        fieldWithPath("message").description("Response message"),
+                        fieldWithPath("data.email").description("Email address that is not verified")
                     )
                 )
             )

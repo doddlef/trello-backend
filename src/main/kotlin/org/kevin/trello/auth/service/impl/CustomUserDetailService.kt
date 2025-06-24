@@ -21,7 +21,7 @@ class CustomUserDetailService(
         val account = accountMapper.findByEmail(username)
 
         if (account == null) throw UsernameNotFoundException("email $username not found")
-        if (!account.isEmailVerified) throw EmailNotVerifiedException()
+        if (!account.isEmailVerified) throw EmailNotVerifiedException(account.email)
         return AccountDetailAdaptor(account)
     }
 }

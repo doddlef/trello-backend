@@ -2,6 +2,7 @@ package org.kevin.trello.config.sql
 
 import org.kevin.trello.account.mapper.typeHandler.UserRoleTypeHandler
 import org.kevin.trello.account.mapper.typeHandler.UserStatusTypeHandler
+import org.kevin.trello.board.mapper.typeHandler.BoardVisibilityTypeHandler
 import org.mybatis.spring.SqlSessionFactoryBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -19,7 +20,7 @@ class SqlConfig {
         sqlSessionFactoryBean.setDataSource(dataSource)
         sqlSessionFactoryBean.setConfigLocation(ClassPathResource("mybatis-config.xml"))
         sqlSessionFactoryBean.addTypeHandlers(
-            UserRoleTypeHandler(), UserStatusTypeHandler()
+            UserRoleTypeHandler(), UserStatusTypeHandler(), BoardVisibilityTypeHandler(),
         )
         return sqlSessionFactoryBean
     }
