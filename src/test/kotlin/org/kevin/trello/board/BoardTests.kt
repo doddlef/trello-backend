@@ -1,5 +1,6 @@
 package org.kevin.trello.board
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import jakarta.servlet.http.Cookie
 import net.bytebuddy.utility.RandomString
 import org.junit.jupiter.api.BeforeEach
@@ -9,6 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.kevin.trello.account.mapper.AccountMapper
 import org.kevin.trello.account.mapper.query.AccountInsertQuery
 import org.kevin.trello.auth.AuthProperties
+import org.kevin.trello.board.mapper.BoardViewMapper
+import org.kevin.trello.board.mapper.query.BoardViewSearchQuery
 import org.kevin.trello.core.response.ResponseCode
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
@@ -26,6 +29,7 @@ import org.springframework.restdocs.payload.PayloadDocumentation.*
 import org.springframework.restdocs.cookies.CookieDocumentation.*
 import org.springframework.transaction.annotation.Transactional
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -37,11 +41,13 @@ class BoardTests @Autowired constructor(
     val authProperties: AuthProperties,
     val passwordEncoder: PasswordEncoder,
     val accountMapper: AccountMapper,
+    val boardViewMapper: BoardViewMapper,
 ) {
     private val email = "${RandomString(8).nextString()}@example.com"
     private val nickname = "${RandomString(4).nextString()}-user"
     private val password = "Password123!"
 
+    private lateinit var accountUid: String;
     private var accessCookie: Cookie? = null
     private var refreshCookie: Cookie? = null
 
@@ -55,6 +61,7 @@ class BoardTests @Autowired constructor(
         ).let {
             val count = accountMapper.insertAccount(it)
             assertEquals(1, count)
+            accountUid = it.uid
         }
 
         // login
@@ -181,5 +188,91 @@ class BoardTests @Autowired constructor(
                     )
                 )
             )
+    }
+
+    @Test
+    @DisplayName("like and dislike board")
+    fun `like and dislike board`() {
+        val boardName = "test board"
+        val requestBody = """
+                {
+                    "name": "$boardName",
+                    "visibility": "PRIVATE"
+                }
+            """.trimIndent()
+
+        val boardId = mockMvc.perform(
+            post("/api/v1/board")
+                .cookie(accessCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody)
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+            .andReturn()
+            .response
+            .contentAsString
+            .let {
+                val str = jacksonObjectMapper()
+                    .readTree(it)
+                    .path("data")
+                    .path("board")
+                    .path("boardId")
+                    .asText()
+                assertNotNull(str, "Board ID should not be null after creation")
+                str
+            }
+
+        mockMvc.perform(
+            post("/api/v1/board/$boardId/like")
+                .cookie(accessCookie)
+        )
+            .andExpect(status().isOk)
+            .andDo(
+                document(
+                    "like-board",
+                    responseFields(
+                        fieldWithPath("code").description("Response code"),
+
+                    ),
+                )
+            )
+
+        BoardViewSearchQuery(
+            uid = accountUid,
+            boardId = boardId,
+        ).let {
+            boardViewMapper.searchBoardView(it)
+                .firstOrNull()
+                ?.let { boardView ->
+                    assertEquals(true, boardView.isFavorite, "Board should be marked as favorite after liking")
+                } ?: throw IllegalStateException("Board not found after liking")
+        }
+
+        mockMvc.perform(
+            post("/api/v1/board/$boardId/dislike")
+                .cookie(accessCookie)
+        )
+            .andExpect(status().isOk)
+            .andDo(
+                document(
+                    "dislike-board",
+                    responseFields(
+                        fieldWithPath("code").description("Response code"),
+
+                        ),
+                )
+            )
+
+        BoardViewSearchQuery(
+            uid = accountUid,
+            boardId = boardId,
+        ).let {
+            boardViewMapper.searchBoardView(it)
+                .firstOrNull()
+                ?.let { boardView ->
+                    assertEquals(false, boardView.isFavorite, "Board should be unmarked after disliking")
+                } ?: throw IllegalStateException("Board not found after liking")
+        }
     }
 }

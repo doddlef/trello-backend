@@ -8,11 +8,13 @@ import org.kevin.trello.board.mapper.BoardOwnershipMapper
 import org.kevin.trello.board.mapper.BoardViewMapper
 import org.kevin.trello.board.mapper.query.BoardInsertQuery
 import org.kevin.trello.board.mapper.query.BoardOwnerShipInsertQuery
+import org.kevin.trello.board.mapper.query.BoardOwnershipUpdateQuery
 import org.kevin.trello.board.mapper.query.BoardViewSearchQuery
 import org.kevin.trello.board.model.BoardView
 import org.kevin.trello.board.service.BoardService
 import org.kevin.trello.board.service.vo.BoardCreateVO
 import org.kevin.trello.board.service.vo.BoardSearchVO
+import org.kevin.trello.board.service.vo.BoardSelectVO
 import org.kevin.trello.core.exception.BadArgumentException
 import org.kevin.trello.core.exception.TrelloException
 import org.kevin.trello.core.response.ApiResponse
@@ -100,5 +102,31 @@ class BoardServiceImpl(
                 .add("limit" to limit)
                 .build()
         }
+    }
+
+    @Transactional
+    override fun likeBoard(vo: BoardSelectVO): ApiResponse {
+        BoardOwnershipUpdateQuery(
+            boardId = vo.boardId,
+            uid = vo.account.uid,
+            isFavorite = true,
+        ).let {
+            boardOwnershipMapper.updateBoardOwnership(it)
+        }
+
+        return ApiResponse.success().build()
+    }
+
+    @Transactional
+    override fun dislikeBoard(vo: BoardSelectVO): ApiResponse {
+        BoardOwnershipUpdateQuery(
+            boardId = vo.boardId,
+            uid = vo.account.uid,
+            isFavorite = false,
+        ).let {
+            boardOwnershipMapper.updateBoardOwnership(it)
+        }
+
+        return ApiResponse.success().build()
     }
 }

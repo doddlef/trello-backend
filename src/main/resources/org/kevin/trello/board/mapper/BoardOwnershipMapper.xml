@@ -14,4 +14,23 @@
             #{isFavorite, jdbcType=BIT}
         )
     </insert>
+
+    <update id="updateBoardOwnership">
+        UPDATE board_ownership
+        <set>
+            <if test="readOnly != null">
+                read_only = #{readOnly, jdbcType=BIT},
+            </if>
+            <if test="lastOpen != null">
+                last_open = #{lastOpen, jdbcType=TIMESTAMP},
+            </if>
+            <if test="isFavorite != null">
+                is_favorite = #{isFavorite, jdbcType=BIT},
+            </if>
+        </set>
+        <where>
+            board_id = #{boardId, jdbcType=VARCHAR}
+            AND uid = #{uid, jdbcType=VARCHAR}
+        </where>
+    </update>
 </mapper>

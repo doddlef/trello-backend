@@ -1,14 +1,17 @@
 package org.kevin.trello.board.controller
 
+import jakarta.websocket.server.PathParam
 import org.kevin.trello.auth.utils.SecurityUtils
 import org.kevin.trello.board.controller.request.CreateBoardRequest
 import org.kevin.trello.board.model.BoardVisibility
 import org.kevin.trello.board.service.BoardService
 import org.kevin.trello.board.service.vo.BoardCreateVO
 import org.kevin.trello.board.service.vo.BoardSearchVO
+import org.kevin.trello.board.service.vo.BoardSelectVO
 import org.kevin.trello.core.exception.TrelloException
 import org.kevin.trello.core.response.ApiResponse
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -56,6 +59,30 @@ class BoardController(
         ).let {
             val response = boardService.boardList(it)
             return response
+        }
+    }
+
+    @PostMapping("/{boardId}/like")
+    fun likeBoard(@PathVariable("boardId") boardId: String): ApiResponse {
+        val account = SecurityUtils.currentAccountOrThrow()
+
+        BoardSelectVO(
+            account = account,
+            boardId = boardId
+        ).let {
+            return boardService.likeBoard(it)
+        }
+    }
+
+    @PostMapping("/{boardId}/dislike")
+    fun dislikeBoard(@PathVariable("boardId") boardId: String): ApiResponse {
+        val account = SecurityUtils.currentAccountOrThrow()
+
+        BoardSelectVO(
+            account = account,
+            boardId = boardId
+        ).let {
+            return boardService.dislikeBoard(it)
         }
     }
 }
