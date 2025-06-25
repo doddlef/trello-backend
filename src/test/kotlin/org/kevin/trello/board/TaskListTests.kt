@@ -4,7 +4,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import jakarta.servlet.http.Cookie
 import net.bytebuddy.utility.RandomString
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.kevin.trello.account.mapper.AccountMapper
@@ -170,6 +169,139 @@ class TaskListTests @Autowired constructor(
             assertEquals("1", it[0].name, "First task list should have name '1'")
             assertEquals("2", it[1].name, "Second task list should have name '2'")
             assert(it[0].position < it[1].position, { "First task list should have a lower position than the second" })
+        }
+    }
+
+    @Test
+    fun `rename task list`() {
+        val requestBody = """
+            {
+                "name": "1",
+                "boardId": "$boardId"
+            }
+        """.trimIndent()
+
+        val listId = mockMvc.perform(
+            post("/api/v1/tasklist")
+                .cookie(accessCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody)
+        )
+            .andExpect(status().isOk)
+            .andReturn()
+            .response
+            .contentAsString
+            .let {
+                val str = jacksonObjectMapper()
+                    .readTree(it)
+                    .path("data")
+                    .path("listId")
+                    .asText()
+                assertNotNull(str, "List ID should not be null after creation")
+                str
+            }
+
+        val renameRequest = """
+            {
+                "listId": "$listId",
+                "newName": "Renamed Task List"
+            }
+        """.trimIndent()
+
+        mockMvc.perform(
+            put("/api/v1/tasklist/rename")
+                .cookie(accessCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(renameRequest)
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+            .andDo(
+                document(
+                    "rename-task-list",
+                    requestFields(
+                        fieldWithPath("listId").description("The ID of the task list to rename"),
+                        fieldWithPath("newName").description("The new name for the task list")
+                    ),
+                    responseFields(
+                        fieldWithPath("code").description("Response code indicating success or failure"),
+                        fieldWithPath("message").optional().description("A message describing the result of the operation"),
+                        fieldWithPath("data.newName").description("The new name of the task list"),
+                    ),
+                )
+            )
+
+        taskListMapper.findByListId(listId).let {
+            assertNotNull(it, "Task list should exist after renaming")
+            assertEquals("Renamed Task List", it.name, "Task list name should be updated to 'Renamed Task List'")
+        }
+    }
+
+    @Test
+    fun `move task list`() {
+        for (i in 1..3) {
+            val requestBody = """
+                {
+                    "name": "$i",
+                    "boardId": "$boardId"
+                }
+            """.trimIndent()
+
+            mockMvc.perform(
+                post("/api/v1/tasklist")
+                    .cookie(accessCookie)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody)
+            )
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+        }
+
+        val lists = taskListMapper.findByBoard(boardId).let {
+            assertEquals(3, it.size, "There should be 3 task lists in the board")
+            assertEquals("1", it[0].name, "First task list should have name '1'")
+            assertEquals("2", it[1].name, "Second task list should have name '2'")
+            assertEquals("3", it[2].name, "Third task list should have name '3'")
+            it
+        }
+
+        val moveRequest = """
+            {
+                "listId": "${lists[0].listId}",
+                "afterListId": "${lists[1].listId}",
+                "boardId": "$boardId"
+            }
+        """.trimIndent()
+
+        mockMvc.perform(
+            put("/api/v1/tasklist/move")
+                .cookie(accessCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(moveRequest)
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+            .andDo(
+                document(
+                    "move-task-list",
+                    requestFields(
+                        fieldWithPath("listId").description("The ID of the task list to move"),
+                        fieldWithPath("afterListId").description("The ID of the task list after which to move the current task list"),
+                        fieldWithPath("boardId").description("The ID of the board containing the task list")
+                    ),
+                    responseFields(
+                        fieldWithPath("code").description("Response code indicating success or failure"),
+                        fieldWithPath("message").optional().description("A message describing the result of the operation"),
+                        fieldWithPath("data.newPosition").description("the new position of the moved task list"),
+                    ),
+                )
+            )
+
+        taskListMapper.findByBoard(boardId).let {
+            assertEquals(3, it.size, "There should be 3 task lists in the board")
+            assertEquals("2", it[0].name, "First task list should now be '2'")
+            assertEquals("1", it[1].name, "Second task list should now be '1'")
+            assertEquals("3", it[2].name, "Third task list should still be '3'")
         }
     }
 }

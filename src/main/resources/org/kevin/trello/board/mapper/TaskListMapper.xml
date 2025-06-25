@@ -26,10 +26,31 @@
         )
     </insert>
 
+    <update id="updateById">
+        UPDATE task_lists
+        <set>
+            <if test="name != null">
+                name = #{name, jdbcType=VARCHAR},
+            </if>
+            <if test="position != null">
+                position = #{position, jdbcType=INTEGER},
+            </if>
+        </set>
+        <where>
+            list_id = #{listId, jdbcType=VARCHAR}
+        </where>
+    </update>
+
     <select id="findByBoard" resultMap="TaskListMap" parameterType="java.lang.String">
         SELECT <include refid="TaskListColumns"/>
         FROM task_lists
         WHERE board_id = #{boardId, jdbcType=VARCHAR}
         ORDER BY position ASC
+    </select>
+
+    <select id="findByListId" resultMap="TaskListMap" parameterType="java.lang.String">
+        SELECT <include refid="TaskListColumns"/>
+        FROM task_lists
+        WHERE list_id = #{listId, jdbcType=VARCHAR}
     </select>
 </mapper>

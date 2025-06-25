@@ -6,11 +6,13 @@ import org.kevin.trello.account.mapper.AccountMapper
 import org.kevin.trello.account.mapper.query.AccountInsertQuery
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.transaction.annotation.Transactional
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 @SpringBootTest
+@Transactional
 class MapperTests {
     private val mapper: AccountMapper
 
