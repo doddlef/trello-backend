@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.kevin.trello.board.mapper.TaskListMapper">
+    <resultMap id="TaskListMap" type="org.kevin.trello.board.model.TaskList">
+        <id column="list_id" property="listId" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="position" property="position" jdbcType="INTEGER"/>
+        <result column="board_id" property="boardId" jdbcType="VARCHAR"/>
+        <result column="created_by" property="createdBy" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="TaskListColumns">
+        list_id, name, position, board_id, created_by
+    </sql>
+
+    <insert id="insert" parameterType="org.kevin.trello.board.mapper.query.TaskListInsertQuery">
+        INSERT INTO task_lists VALUES (
+            #{listId, jdbcType=VARCHAR},
+            #{name, jdbcType=VARCHAR},
+            #{position, jdbcType=INTEGER},
+            #{boardId, jdbcType=VARCHAR},
+            #{createdBy, jdbcType=VARCHAR}
+        )
+    </insert>
+
+    <select id="findByBoard" resultMap="TaskListMap" parameterType="java.lang.String">
+        SELECT <include refid="TaskListColumns"/>
+        FROM task_lists
+        WHERE board_id = #{boardId, jdbcType=VARCHAR}
+        ORDER BY position ASC
+    </select>
+</mapper>

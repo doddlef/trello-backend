@@ -1,6 +1,7 @@
 package org.kevin.trello.board.mapper
 
 import org.apache.ibatis.annotations.Mapper
+import org.apache.ibatis.annotations.Param
 import org.kevin.trello.board.mapper.query.BoardOwnerShipInsertQuery
 import org.kevin.trello.board.mapper.query.BoardOwnershipUpdateQuery
 

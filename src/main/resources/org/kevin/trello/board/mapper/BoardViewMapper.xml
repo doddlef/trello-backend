@@ -15,7 +15,23 @@
         <result property="isFavorite" column="is_favorite"/>
     </resultMap>
 
-    <select id="searchBoardView">
+    <select id="findByAccountAndBoard" resultMap="BoardViewResultMap">
+        SELECT
+            b.board_id,
+            b.name,
+            b.visibility,
+            bo.uid,
+            bo.read_only,
+            bo.added_at,
+            bo.last_open,
+            bo.is_favorite
+        FROM boards b
+        JOIN board_ownership bo ON b.board_id = bo.board_id
+        WHERE bo.uid = #{uid} AND deleted_flag = false
+            AND b.board_id = #{boardId}
+    </select>
+
+    <select id="searchBoardView" resultMap="BoardViewResultMap">
         SELECT
             b.board_id,
             b.name,
