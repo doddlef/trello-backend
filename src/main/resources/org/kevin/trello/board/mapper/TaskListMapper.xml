@@ -10,10 +10,11 @@
         <result column="position" property="position" jdbcType="INTEGER"/>
         <result column="board_id" property="boardId" jdbcType="VARCHAR"/>
         <result column="created_by" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="archived" property="archived" jdbcType="BIT" />
     </resultMap>
 
     <sql id="TaskListColumns">
-        list_id, name, position, board_id, created_by
+        list_id, name, position, board_id, created_by, archived
     </sql>
 
     <insert id="insert" parameterType="org.kevin.trello.board.mapper.query.TaskListInsertQuery">
@@ -22,7 +23,8 @@
             #{name, jdbcType=VARCHAR},
             #{position, jdbcType=INTEGER},
             #{boardId, jdbcType=VARCHAR},
-            #{createdBy, jdbcType=VARCHAR}
+            #{createdBy, jdbcType=VARCHAR},
+            DEFAULT
         )
     </insert>
 
@@ -34,6 +36,9 @@
             </if>
             <if test="position != null">
                 position = #{position, jdbcType=INTEGER},
+            </if>
+            <if test="archived != null">
+                archived = #{archived, jdbcType=BIT},
             </if>
         </set>
         <where>

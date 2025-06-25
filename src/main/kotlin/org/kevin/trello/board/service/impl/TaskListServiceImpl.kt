@@ -129,4 +129,21 @@ class TaskListServiceImpl(
             .add("newPosition" to newPos)
             .build()
     }
+
+    @Transactional
+    override fun archiveTaskList(listId: String, account: Account): ApiResponse {
+        val list = taskListMapper.findByListId(listId)
+            ?: throw BadArgumentException("Task list with ID $listId does not exist")
+        validateModification(account, list.boardId)
+
+        TaskListUpdateQuery(
+            listId = listId,
+            archived = true
+        ).let {
+            taskListMapper.updateById(it)
+            return ApiResponse.success()
+                .message("Task list archived successfully")
+                .build()
+        }
+    }
 }

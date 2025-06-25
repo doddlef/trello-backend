@@ -6,6 +6,7 @@ data class TaskList(
     val position: Int,
     val boardId: String,
     val createdBy: String,
+    val archived: Boolean,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -4,4 +4,5 @@ data class TaskListUpdateQuery(
     val listId: String,
     val name: String? = null,
     val position: Int? = null,
+    val archived: Boolean? = null,
 )

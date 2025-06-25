@@ -3,7 +3,6 @@ package org.kevin.trello.board.mapper
 import org.apache.ibatis.annotations.Mapper
 import org.kevin.trello.board.mapper.query.TaskListInsertQuery
 import org.kevin.trello.board.mapper.query.TaskListUpdateQuery
-import org.kevin.trello.board.model.Board
 import org.kevin.trello.board.model.TaskList
 
 @Mapper

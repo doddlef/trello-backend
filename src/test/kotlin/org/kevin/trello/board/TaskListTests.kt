@@ -43,8 +43,8 @@ class TaskListTests @Autowired constructor(
     private val nickname = "${RandomString(4).nextString()}-user"
     private val password = "Password123!"
 
-    private lateinit var accountUid: String;
-    private lateinit var boardId: String;
+    private lateinit var accountUid: String
+    private lateinit var boardId: String
     private var accessCookie: Cookie? = null
     private var refreshCookie: Cookie? = null
 
@@ -303,5 +303,50 @@ class TaskListTests @Autowired constructor(
             assertEquals("1", it[1].name, "Second task list should now be '1'")
             assertEquals("3", it[2].name, "Third task list should still be '3'")
         }
+    }
+
+    @Test
+    fun `archive task list`() {
+        val requestBody = """
+            {
+                "name": "1",
+                "boardId": "$boardId"
+            }
+        """.trimIndent()
+
+        val listId = mockMvc.perform(
+            post("/api/v1/tasklist")
+                .cookie(accessCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody)
+        )
+            .andExpect(status().isOk)
+            .andReturn()
+            .response
+            .contentAsString
+            .let {
+                val str = jacksonObjectMapper()
+                    .readTree(it)
+                    .path("data")
+                    .path("listId")
+                    .asText()
+                assertNotNull(str, "List ID should not be null after creation")
+                str
+            }
+
+        mockMvc.perform(
+            delete(("/api/v1/tasklist/$listId"))
+                .cookie(accessCookie)
+        )
+            .andExpect(status().isOk)
+            .andDo(
+                document(
+                    "archive-task-list",
+                    responseFields(
+                        fieldWithPath("code").description("Response code indicating success or failure"),
+                        fieldWithPath("message").optional().description("A message describing the result of the operation"),
+                    ),
+                )
+            )
     }
 }
