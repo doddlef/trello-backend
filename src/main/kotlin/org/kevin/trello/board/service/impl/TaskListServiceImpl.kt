@@ -1,10 +1,10 @@
 package org.kevin.trello.board.service.impl
 
 import org.kevin.trello.account.model.Account
-import org.kevin.trello.board.mapper.BoardViewMapper
 import org.kevin.trello.board.mapper.TaskListMapper
 import org.kevin.trello.board.mapper.query.TaskListInsertQuery
 import org.kevin.trello.board.mapper.query.TaskListUpdateQuery
+import org.kevin.trello.board.repo.BoardViewCacheRepo
 import org.kevin.trello.board.service.TaskListService
 import org.kevin.trello.board.service.vo.TaskListCreateVO
 import org.kevin.trello.board.service.vo.TaskListMoveVO
@@ -20,7 +20,7 @@ const val POSITION_INTERFACE = 1024
 @Service
 class TaskListServiceImpl(
     private val taskListMapper: TaskListMapper,
-    private val boardViewMapper: BoardViewMapper,
+    private val boardViewMapper: BoardViewCacheRepo,
 ): TaskListService {
     private fun validateListName(name: String) {
         if (name.isBlank() || name.length > 255) {
@@ -90,12 +90,12 @@ class TaskListServiceImpl(
 
     @Transactional
     override fun moveTaskList(vo: TaskListMoveVO): ApiResponse {
-        val (listId, afterListId, boardId, account) = vo
+        val (listId, afterListId, account) = vo
+        val boardId = taskListMapper.findByListId(listId)?.boardId
+            ?: throw BadArgumentException("Task list with ID $listId does not exist")
         validateModification(account, boardId)
 
         val lists = taskListMapper.findByBoard(boardId).sortedBy { it.position }
-        lists.find { it.listId == listId }
-            ?: throw BadArgumentException("Task list with ID $listId does not exist")
         if (afterListId != null && afterListId == listId)
             throw BadArgumentException("Cannot move task list to itself")
 

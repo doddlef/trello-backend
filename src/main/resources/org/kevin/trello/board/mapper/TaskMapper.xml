@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.kevin.trello.board.mapper.TaskMapper">
+    <resultMap id="TaskResultMap" type="org.kevin.trello.board.model.Task">
+        <id property="taskId" column="task_id"/>
+        <result property="listId" column="list_id"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="finished" column="finished"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="date" column="date"/>
+        <result property="creatorId" column="creator_id"/>
+        <result property="archived" column="archived"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="finishedAt" column="finished_at"/>
+        <result property="position" column="position"/>
+    </resultMap>
+
+    <sql id="TaskColumns">
+        task_id, list_id, parent_id, finished, title, description, date, creator_id, archived, created_at, updated_at, finished_at, position
+    </sql>
+
+    <select id="findByTaskId" resultMap="TaskResultMap">
+        SELECT <include refid="TaskColumns"/>
+        FROM task
+        WHERE task_id = #{taskId}
+    </select>
+</mapper>

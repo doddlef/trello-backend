@@ -49,13 +49,13 @@
     <select id="findByBoard" resultMap="TaskListMap" parameterType="java.lang.String">
         SELECT <include refid="TaskListColumns"/>
         FROM task_lists
-        WHERE board_id = #{boardId, jdbcType=VARCHAR}
+        WHERE board_id = #{boardId, jdbcType=VARCHAR} AND archived = FALSE
         ORDER BY position ASC
     </select>
 
     <select id="findByListId" resultMap="TaskListMap" parameterType="java.lang.String">
         SELECT <include refid="TaskListColumns"/>
         FROM task_lists
-        WHERE list_id = #{listId, jdbcType=VARCHAR}
+        WHERE list_id = #{listId, jdbcType=VARCHAR} AND archived = FALSE
     </select>
 </mapper>

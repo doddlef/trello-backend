@@ -26,6 +26,7 @@ import org.springframework.restdocs.payload.PayloadDocumentation.*
 import org.springframework.transaction.annotation.Transactional
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -168,7 +169,7 @@ class TaskListTests @Autowired constructor(
             assertEquals(2, it.size, "There should be 2 task lists in the board")
             assertEquals("1", it[0].name, "First task list should have name '1'")
             assertEquals("2", it[1].name, "Second task list should have name '2'")
-            assert(it[0].position < it[1].position, { "First task list should have a lower position than the second" })
+            assert(it[0].position < it[1].position) { "First task list should have a lower position than the second" }
         }
     }
 
@@ -268,8 +269,7 @@ class TaskListTests @Autowired constructor(
         val moveRequest = """
             {
                 "listId": "${lists[0].listId}",
-                "afterListId": "${lists[1].listId}",
-                "boardId": "$boardId"
+                "afterListId": "${lists[1].listId}"
             }
         """.trimIndent()
 
@@ -287,7 +287,6 @@ class TaskListTests @Autowired constructor(
                     requestFields(
                         fieldWithPath("listId").description("The ID of the task list to move"),
                         fieldWithPath("afterListId").description("The ID of the task list after which to move the current task list"),
-                        fieldWithPath("boardId").description("The ID of the board containing the task list")
                     ),
                     responseFields(
                         fieldWithPath("code").description("Response code indicating success or failure"),
@@ -348,5 +347,13 @@ class TaskListTests @Autowired constructor(
                     ),
                 )
             )
+
+        taskListMapper.findByListId(listId).let {
+            assertNull(it, "Task list should exist after archiving")
+        }
+
+        taskListMapper.findByBoard(boardId).let {
+            assertEquals(0, it.size, "There should be 0 task list in the board")
+        }
     }
 }

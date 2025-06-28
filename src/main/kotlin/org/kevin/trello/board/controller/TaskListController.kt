@@ -57,12 +57,11 @@ class TaskListController(
         val account = SecurityUtils.currentAccount()
             ?: throw TrelloException("User must be logged in to move a task list")
 
-        val (listId, afterListId, boardId) = request
+        val (listId, afterListId) = request
         return taskListService.moveTaskList(
             TaskListMoveVO(
                 listId = listId,
                 afterListId = afterListId,
-                boardId = boardId,
                 account = account
             )
         )

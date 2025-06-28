@@ -28,8 +28,15 @@ class CacheConfig(
                 .build()
         )
 
+        val boardViewCache = CaffeineCache(
+            "boardViews", Caffeine.newBuilder()
+                .maximumSize(cacheProperties.boardViewMaxSize)
+                .expireAfterAccess(cacheProperties.boardViewLifeMinutes, TimeUnit.MINUTES)
+                .build()
+        )
+
         cacheManager.setCaches(listOf(
-            accountCache,
+            accountCache, boardViewCache
         ))
 
         return cacheManager
