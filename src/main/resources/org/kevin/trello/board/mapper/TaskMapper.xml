@@ -9,6 +9,7 @@
         <result property="listId" column="list_id"/>
         <result property="parentId" column="parent_id"/>
         <result property="finished" column="finished" />
+        <result property="position" column="position"/>
         <result property="title" column="title"/>
         <result property="description" column="description"/>
         <result property="date" column="date"/>
@@ -17,17 +18,39 @@
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
         <result property="finishedAt" column="finished_at"/>
-        <result property="position" column="position"/>
     </resultMap>
 
     <sql id="TaskColumns">
-        task_id, list_id, parent_id, finished, title, description, date, creator_id, archived, created_at, updated_at, finished_at, position
+        task_id, list_id, parent_id, finished, position, title, description, date, creator_id, archived, created_at, updated_at, finished_at
     </sql>
 
     <select id="findByTaskId" resultMap="TaskResultMap">
         SELECT <include refid="TaskColumns"/>
         FROM tasks
-        WHERE task_id = #{taskId}
+        WHERE task_id = #{taskId} AND archived = false
+    </select>
+
+    <select id="search" resultMap="TaskResultMap" parameterType="org.kevin.trello.board.mapper.query.TaskSearchQuery">
+        SELECT <include refid="TaskColumns"/>
+        FROM tasks
+        <where>
+            <if test="listId != null">
+                AND list_id = #{listId}
+            </if>
+            <if test="parentId != null">
+                AND parent_id = #{parentId}
+            </if>
+            <if test="isFinished != null">
+                AND finished = #{isFinished}
+            </if>
+            <if test="startWith != null and startWith != ''">
+                AND startWith LIKE CONCAT('%', #{startWith}, '%')
+            </if>
+            <if test="creator != null">
+                AND creator_id = #{creator}
+            </if>
+        </where>
+        ORDER BY position ASC
     </select>
 
     <insert id="insert">

@@ -209,19 +209,22 @@ class TaskTests @Autowired constructor(
                         fieldWithPath("parentId").type(String::class.java).description("The parent task belongs").optional(),
                         fieldWithPath("title").type(String::class.java).description("Title of the task"),
                     ),
-                    requestFields(
+                    responseFields(
                         fieldWithPath("code").description("Response code indicating success or failure"),
                         fieldWithPath("message").optional().description("A message describing the result of the operation"),
                         fieldWithPath("data.task.taskId").description("Unique identifier for the task"),
                         fieldWithPath("data.task.listId").description("Unique identifier for the list to which this task belongs"),
                         fieldWithPath("data.task.parentId").optional().description("Unique identifier for the parent task, if this task is a subtask"),
-                        fieldWithPath("data.task.position").description("Position of the task in the list"),
                         fieldWithPath("data.task.finished").description("Indicates whether the task is finished"),
+                        fieldWithPath("data.task.position").description("Position of the task in the list"),
                         fieldWithPath("data.task.title").description("Title of the task"),
+                        fieldWithPath("data.task.description").optional().description("Description of the task"),
+                        fieldWithPath("data.task.date").optional().description("Due date of the task, if applicable"),
                         fieldWithPath("data.task.creatorId").description("ID of the user who created the task"),
                         fieldWithPath("data.task.archived").description("Indicates whether the task is archived"),
                         fieldWithPath("data.task.createdAt").description("Task creation timestamp"),
                         fieldWithPath("data.task.updatedAt").description("Task last update timestamp"),
+                        fieldWithPath("data.task.finishedAt").optional().description("Timestamp when the task was finished, if applicable")
                     )
                 )
             )

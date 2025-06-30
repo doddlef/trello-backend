@@ -1,5 +1,6 @@
 package org.kevin.trello.board.model
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -19,12 +20,15 @@ data class Task(
      */
     val parentId: String?,
 
-    val position: Int,
-
     /**
      * Indicates whether the task is finished.
      */
     val finished: Boolean,
+
+    /**
+     * Position of the task in the list or in parent task, used for ordering.
+     */
+    val position: Int,
 
     /**
      * Title of the task.
@@ -41,6 +45,7 @@ data class Task(
     val updatedAt: LocalDateTime,
     val finishedAt: LocalDateTime?,
 ) {
+    @get:JsonIgnore
     val isSubtask: Boolean
         get() = parentId != null
 }

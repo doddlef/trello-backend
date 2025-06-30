@@ -2,6 +2,7 @@ package org.kevin.trello.board.service.impl
 
 import org.kevin.trello.board.mapper.TaskMapper
 import org.kevin.trello.board.mapper.query.TaskInsertQuery
+import org.kevin.trello.board.mapper.query.TaskSearchQuery
 import org.kevin.trello.board.model.Task
 import org.kevin.trello.board.repo.PathHelper
 import org.kevin.trello.board.service.TaskService
@@ -59,15 +60,23 @@ class TaskServiceImpl(
         // validate the vo and authority
         validateCreateVO(vo)
 
-
-
         // create the task
+        val pos = TaskSearchQuery(
+            listId = vo.listId,
+            parentId = vo.parentId,
+        ).let {
+            val tasks = taskMapper.search(it)
+            tasks
+        }.let {
+            return@let if (it.isNotEmpty()) it.last().position + POSITION_INTERVAL else POSITION_INTERVAL
+        }
+
         TaskInsertQuery(
             title = vo.title,
             creatorId = vo.account.uid,
             listId = vo.listId,
             parentId = vo.parentId,
-            position = 0,
+            position = pos,
         ).let {
             taskMapper.insert(it)
             val task = taskMapper.findByTaskId(it.taskId)

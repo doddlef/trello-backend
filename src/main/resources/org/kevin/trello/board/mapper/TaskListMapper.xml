@@ -53,6 +53,34 @@
         ORDER BY position ASC
     </select>
 
+    <select id="searchByQuery" resultMap="TaskListMap" parameterType="org.kevin.trello.board.mapper.query.TaskListSearchQuery">
+        SELECT <include refid="TaskListColumns"/>
+        FROM task_lists
+        <where>
+            <if test="boardId != null">
+                board_id = #{boardId, jdbcType=VARCHAR} AND
+            </if>
+            <if test="createdBy != null">
+                created_by = #{createdBy, jdbcType=VARCHAR} AND
+            </if>
+            <if test="startWith != null">
+                name LIKE CONCAT('%', #{startWith, jdbcType=VARCHAR}, '%') AND
+            </if>
+            archived = FALSE
+        </where>
+        <choose>
+            <when test="orderBy == 'NAME">
+                ORDER BY name ASC
+            </when>
+            <when test="orderBy == 'NAME_DESC'">
+                ORDER BY name DESC
+            </when>
+            <otherwise>
+                ORDER BY position ASC
+            </otherwise>
+        </choose>
+    </select>
+
     <select id="findByListId" resultMap="TaskListMap" parameterType="java.lang.String">
         SELECT <include refid="TaskListColumns"/>
         FROM task_lists
