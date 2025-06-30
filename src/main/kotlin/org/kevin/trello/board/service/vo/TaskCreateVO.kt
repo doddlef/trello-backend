@@ -16,10 +16,5 @@ data class TaskCreateVO (
     /**
      * The ID of the list where the task will be created.
      */
-    val listId: String,
-
-    /**
-     * the parent task ID if this is a sub-task.
-     */
-    val parentId: String?,
+    val listId: String
 )

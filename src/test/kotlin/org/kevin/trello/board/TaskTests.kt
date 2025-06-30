@@ -10,6 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.kevin.trello.account.mapper.AccountMapper
 import org.kevin.trello.account.mapper.query.AccountInsertQuery
 import org.kevin.trello.auth.AuthProperties
+import org.kevin.trello.board.mapper.TaskMapper
+import org.kevin.trello.board.mapper.query.TaskSearchQuery
 import org.kevin.trello.core.response.ResponseCode
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
@@ -38,6 +40,7 @@ class TaskTests @Autowired constructor(
     val authProperties: AuthProperties,
     val passwordEncoder: PasswordEncoder,
     val accountMapper: AccountMapper,
+    val taskMapper: TaskMapper,
 ) {
     private val email = "${RandomString(8).nextString()}@example.com"
     private val nickname = "${RandomString(4).nextString()}-user"
@@ -182,9 +185,8 @@ class TaskTests @Autowired constructor(
 
         val subtaskRequestBody = """
             {
-                "title": "Subtask 1",
-                "listId": "$listId",
-                "parentId": "$parentId"
+                "title": "Task 2",
+                "listId": "$listId"
             }
         """.trimIndent()
 
@@ -197,10 +199,8 @@ class TaskTests @Autowired constructor(
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
             .andExpect(jsonPath("$.data.task").exists())
-            .andExpect(jsonPath("$.data.task.title").value("Subtask 1"))
+            .andExpect(jsonPath("$.data.task.title").value("Task 2"))
             .andExpect(jsonPath("$.data.task.listId").value(listId))
-            .andExpect(jsonPath("$.data.task.parentId").value(parentId)
-        )
             .andDo(
                 document(
                     "create-task",
@@ -214,7 +214,6 @@ class TaskTests @Autowired constructor(
                         fieldWithPath("message").optional().description("A message describing the result of the operation"),
                         fieldWithPath("data.task.taskId").description("Unique identifier for the task"),
                         fieldWithPath("data.task.listId").description("Unique identifier for the list to which this task belongs"),
-                        fieldWithPath("data.task.parentId").optional().description("Unique identifier for the parent task, if this task is a subtask"),
                         fieldWithPath("data.task.finished").description("Indicates whether the task is finished"),
                         fieldWithPath("data.task.position").description("Position of the task in the list"),
                         fieldWithPath("data.task.title").description("Title of the task"),
@@ -224,9 +223,185 @@ class TaskTests @Autowired constructor(
                         fieldWithPath("data.task.archived").description("Indicates whether the task is archived"),
                         fieldWithPath("data.task.createdAt").description("Task creation timestamp"),
                         fieldWithPath("data.task.updatedAt").description("Task last update timestamp"),
-                        fieldWithPath("data.task.finishedAt").optional().description("Timestamp when the task was finished, if applicable")
                     )
                 )
             )
+    }
+
+    @Test
+    fun `move task`() {
+        val secondListCreateBody = """
+            {
+                "name": "2",
+                "boardId": "$boardId"
+            }
+        """.trimIndent()
+
+        val secondListId = mockMvc.perform(
+            post("/api/v1/tasklist")
+                .cookie(accessCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(secondListCreateBody)
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+            .andExpect(jsonPath("$.data.listId").exists())
+            .andReturn()
+            .response
+            .contentAsString
+            .let {
+                val str = jacksonObjectMapper()
+                    .readTree(it)
+                    .path("data")
+                    .path("listId")
+                    .asText()
+                str
+            }
+
+        val taskATitle = "A"
+        val taskARequestBody = """
+            {
+                "title": "$taskATitle",
+                "listId": "$listId"
+            }
+        """.trimIndent()
+
+        val taskAId = mockMvc.perform(
+            post("/api/v1/task")
+                .cookie(accessCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(taskARequestBody)
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+            .andExpect(jsonPath("$.data.task").exists())
+            .andExpect(jsonPath("$.data.task.title").value(taskATitle))
+            .andExpect(jsonPath("$.data.task.listId").value(listId))
+            .andReturn()
+            .response
+            .contentAsString
+            .let {
+                val str = jacksonObjectMapper()
+                    .readTree(it)
+                    .path("data")
+                    .path("task")
+                    .path("taskId")
+                    .asText()
+                str
+            }
+
+        val taskBTitle = "B"
+        val taskBRequestBody = """
+            {
+                "title": "$taskBTitle",
+                "listId": "$listId"
+            }
+        """.trimIndent()
+
+        val taskBId = mockMvc.perform(
+            post("/api/v1/task")
+                .cookie(accessCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(taskBRequestBody)
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+            .andExpect(jsonPath("$.data.task").exists())
+            .andExpect(jsonPath("$.data.task.title").value(taskBTitle))
+            .andExpect(jsonPath("$.data.task.listId").value(listId))
+            .andReturn()
+            .response
+            .contentAsString
+            .let {
+                val str = jacksonObjectMapper()
+                    .readTree(it)
+                    .path("data")
+                    .path("task")
+                    .path("taskId")
+                    .asText()
+                str
+            }
+
+        TaskSearchQuery(
+            listId = listId,
+        ).let {
+            val tasks = taskMapper.search(it)
+            assertEquals(2, tasks.size, "There should be 2 tasks in the list after creation")
+            assertEquals(taskAId, tasks[0].taskId, "First task should be Task A")
+            assertEquals(taskBId, tasks[1].taskId, "Second task should be Task B")
+        }
+
+        """
+            {
+                "taskId": "$taskAId",
+                "listId": "$listId",
+                "afterId": "$taskBId"
+            }
+        """.trimIndent()
+            .let {
+                mockMvc.perform(
+                    post("/api/v1/task/move")
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(it)
+                )
+                    .andExpect(status().isOk)
+                    .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+                    .andExpect(jsonPath("$.data.newPosition").exists())
+            }
+
+        TaskSearchQuery(
+            listId = listId,
+        ).let {
+            val tasks = taskMapper.search(it)
+            assertEquals(2, tasks.size, "There should still be 2 tasks in the list after movement")
+            assertEquals(taskBId, tasks[0].taskId, "First task should be Task B")
+            assertEquals(taskAId, tasks[1].taskId, "Second task should be Task A")
+        }
+
+        """
+            {
+                "taskId": "$taskAId",
+                "listId": "$secondListId",
+                "afterId": null
+            }
+        """.trimIndent()
+            .let {
+                mockMvc.perform(
+                    post("/api/v1/task/move")
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(it)
+                )
+                    .andExpect(status().isOk)
+                    .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+                    .andExpect(jsonPath("$.data.newPosition").exists())
+                    .andDo(
+                        document(
+                            "move-task",
+                            requestFields(
+                                fieldWithPath("taskId").description("the ID of the task to be moved"),
+                                fieldWithPath("listId").description("ID of the destination list where the task will be moved"),
+                                fieldWithPath("afterId").optional().description(
+                                    "The ID of the task after which the moved task will be placed. " +
+                                            "If this is null, the task will be placed at the head of the list."
+                                ),
+                            ),
+                            responseFields(
+                                fieldWithPath("code").description("Response code indicating success or failure"),
+                                fieldWithPath("message").optional().description("A message describing the result of the operation"),
+                                fieldWithPath("data.newPosition").description("The new position of the task in the list after movement"),
+                            )
+                        )
+                    )
+            }
+
+        TaskSearchQuery(
+            listId = listId,
+        ).let {
+            val tasks = taskMapper.search(it)
+            assertEquals(1, tasks.size, "There should be 1 task in the first list after movement")
+            assertEquals(taskBId, tasks[0].taskId, "The only task in the first list should be Task B")
+        }
     }
 }

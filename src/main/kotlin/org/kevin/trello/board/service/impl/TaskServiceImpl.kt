@@ -3,17 +3,18 @@ package org.kevin.trello.board.service.impl
 import org.kevin.trello.board.mapper.TaskMapper
 import org.kevin.trello.board.mapper.query.TaskInsertQuery
 import org.kevin.trello.board.mapper.query.TaskSearchQuery
-import org.kevin.trello.board.model.Task
+import org.kevin.trello.board.mapper.query.TaskUpdateQuery
 import org.kevin.trello.board.repo.PathHelper
 import org.kevin.trello.board.service.TaskService
 import org.kevin.trello.board.service.vo.TaskCreateVO
+import org.kevin.trello.board.service.vo.TaskMoveVO
 import org.kevin.trello.core.exception.BadArgumentException
 import org.kevin.trello.core.exception.TrelloException
 import org.kevin.trello.core.response.ApiResponse
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
-const val POSITION_INTERVAL = 1024
+const val POSITION_INTERVAL = 1024.toDouble()
 
 @Service
 class TaskServiceImpl(
@@ -27,31 +28,14 @@ class TaskServiceImpl(
         if (vo.title.isBlank()) throw BadArgumentException("Title should not be blank")
         if (vo.title.length > 128) throw BadArgumentException("Title should not exceed 128 characters")
         if (vo.listId.isBlank()) throw BadArgumentException("List ID should not be blank")
-        if (vo.parentId != null && vo.parentId.isBlank()) {
-            throw BadArgumentException("Parent ID should be blank if provided")
-        }
 
-        val (boardView, taskList, task) = if (vo.parentId != null) {
-            pathHelper.pathOfTask(vo.parentId, vo.account.uid)
-        } else {
-            pathHelper.pathOfList(vo.listId, vo.account.uid)
-        }
-
-        if (vo.parentId != null) {
-            if (task == null || task.archived) {
-                throw BadArgumentException("Parent task with ID ${vo.parentId} does not exist")
-            }
-
-            if (task.listId != vo.listId) {
-                throw BadArgumentException("Parent task with ID ${vo.parentId} does not belong to the list with ID ${vo.listId}")
-            }
-        }
+        val (boardView, taskList, _) = pathHelper.pathOfList(vo.listId, vo.account.uid)
 
         if (taskList == null || taskList.archived) {
             throw BadArgumentException("List with ID ${vo.listId} does not exist")
         }
-        if (boardView == null) {
-            throw BadArgumentException("Board with ID ${taskList.boardId} does not exist")
+        if (boardView == null || boardView.readOnly) {
+            throw BadArgumentException("Board with ID ${taskList.boardId} does not exist, or you do not have permission to access it")
         }
     }
 
@@ -63,7 +47,6 @@ class TaskServiceImpl(
         // create the task
         val pos = TaskSearchQuery(
             listId = vo.listId,
-            parentId = vo.parentId,
         ).let {
             val tasks = taskMapper.search(it)
             tasks
@@ -75,7 +58,6 @@ class TaskServiceImpl(
             title = vo.title,
             creatorId = vo.account.uid,
             listId = vo.listId,
-            parentId = vo.parentId,
             position = pos,
         ).let {
             taskMapper.insert(it)
@@ -89,5 +71,75 @@ class TaskServiceImpl(
                 .add("task" to task)
                 .build()
         }
+    }
+
+    private fun validateMoveTarget(taskId: String, uid: String) {
+        val (boardView, _, task) = pathHelper.pathOfTask(taskId, uid)
+        if (task == null || task.archived) {
+            throw BadArgumentException("Task with ID ${taskId} does not exist")
+        }
+        if (boardView == null || boardView.readOnly) {
+            throw BadArgumentException("board not exist, or you do not have permission to access it")
+        }
+    }
+
+    private fun validateMoveDestination(listId: String, uid: String) {
+        val (boardView, taskList, _) = pathHelper.pathOfList(listId, uid)
+        if (taskList == null || taskList.archived) {
+            throw BadArgumentException("List with ID ${listId} does not exist")
+        }
+        if (boardView == null || boardView.readOnly) {
+            throw BadArgumentException("Board with ID ${taskList.boardId} does not exist, or you do not have permission to access it")
+        }
+    }
+
+    private fun validateMoveVO(vo: TaskMoveVO) {
+        val (taskId, listId, _, account) = vo
+        if (vo.taskId.isBlank()) throw BadArgumentException("Task ID should not be blank")
+        if (vo.listId.isBlank()) throw BadArgumentException("List ID should not be blank")
+
+        validateMoveTarget(taskId, account.uid)
+        validateMoveDestination(listId, account.uid)
+    }
+
+    private fun decidePosition(taskId: String, listId: String, afterId: String?): Double {
+        if (afterId != null && afterId == taskId)
+            throw BadArgumentException("Cannot move a task after itself")
+        val tasks = taskMapper.search(TaskSearchQuery(listId = listId))
+
+        val afterIdx = afterId?.let { tasks.indexOfFirst { t -> t.taskId == it }} ?: -1
+        val beforeIdx = afterIdx + 1
+
+        val prevPos = if (afterIdx >= 0) tasks[afterIdx].position else 0.0
+        val nextPos = if (beforeIdx < tasks.size) tasks[beforeIdx].position else prevPos + POSITION_INTERVAL
+        val newPos = (prevPos + nextPos) / 2
+
+        if (newPos - prevPos <= 1) {
+            TODO("Handle case where new position is too close to previous position")
+        }
+
+        return newPos + 0.0
+    }
+
+    override fun moveTask(vo: TaskMoveVO): ApiResponse {
+        // validate the vo and authority
+        validateMoveVO(vo)
+
+        // decide position
+        val newPosition = decidePosition(vo.taskId, vo.listId, vo.afterId)
+
+        // update the task
+        TaskUpdateQuery(
+            taskId = vo.taskId,
+            listId = vo.listId,
+            position = newPosition,
+        ).let {
+            taskMapper.updateByTaskId(it)
+        }
+
+        return ApiResponse.success()
+            .message("Task moved successfully")
+            .add("newPosition" to newPosition)
+            .build()
     }
 }

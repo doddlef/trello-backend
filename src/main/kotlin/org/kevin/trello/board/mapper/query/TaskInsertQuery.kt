@@ -6,8 +6,7 @@ data class TaskInsertQuery(
     val title: String,
     val creatorId: String,
     val listId: String,
-    val parentId: String?,
-    val position: Int,
+    val position: Double,
 ) {
     val taskId = UlidCreator.getMonotonicUlid().toString()
 }

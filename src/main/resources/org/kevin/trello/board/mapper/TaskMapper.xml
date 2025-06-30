@@ -7,7 +7,6 @@
     <resultMap id="TaskResultMap" type="org.kevin.trello.board.model.Task">
         <id property="taskId" column="task_id"/>
         <result property="listId" column="list_id"/>
-        <result property="parentId" column="parent_id"/>
         <result property="finished" column="finished" />
         <result property="position" column="position"/>
         <result property="title" column="title"/>
@@ -17,11 +16,10 @@
         <result property="archived" column="archived"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
-        <result property="finishedAt" column="finished_at"/>
     </resultMap>
 
     <sql id="TaskColumns">
-        task_id, list_id, parent_id, finished, position, title, description, date, creator_id, archived, created_at, updated_at, finished_at
+        task_id, list_id, finished, position, title, description, date, creator_id, archived, created_at, updated_at
     </sql>
 
     <select id="findByTaskId" resultMap="TaskResultMap">
@@ -37,9 +35,6 @@
             <if test="listId != null">
                 AND list_id = #{listId}
             </if>
-            <if test="parentId != null">
-                AND parent_id = #{parentId}
-            </if>
             <if test="isFinished != null">
                 AND finished = #{isFinished}
             </if>
@@ -53,8 +48,24 @@
         ORDER BY position ASC
     </select>
 
+    <update id="updateByTaskId">
+        UPDATE tasks
+        <set>
+            <if test="listId != null">list_id = #{listId},</if>
+            <if test="finished != null">finished = #{finished},</if>
+            <if test="position != null">position = #{position},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="date != null">date = #{date},</if>
+            <if test="archived != null">archived = #{archived},</if>
+        </set>
+        <where>
+            task_id = #{taskId}
+        </where>
+    </update>
+
     <insert id="insert">
-        INSERT INTO tasks (task_id, title, creator_id, list_id, parent_id, position)
-        VALUES (#{taskId}, #{title}, #{creatorId}, #{listId}, #{parentId}, #{position})
+        INSERT INTO tasks (task_id, title, creator_id, list_id, position)
+        VALUES (#{taskId}, #{title}, #{creatorId}, #{listId}, #{position})
     </insert>
 </mapper>

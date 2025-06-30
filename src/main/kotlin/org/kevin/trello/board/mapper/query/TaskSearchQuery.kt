@@ -7,11 +7,6 @@ data class TaskSearchQuery(
     val listId: String? = null,
 
     /**
-     * Unique identifier for the parent task, the sub-task belong.
-     */
-    val parentId: String? = null,
-
-    /**
      * null: all tasks, true: finished tasks, false: unfinished tasks
      */
     val isFinished: Boolean? = null,
