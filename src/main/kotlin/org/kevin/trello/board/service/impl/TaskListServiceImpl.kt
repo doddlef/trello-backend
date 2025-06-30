@@ -40,9 +40,10 @@ class TaskListServiceImpl(
         validateListName(vo.name)
         validateModification(vo.account, vo.boardId)
 
-        val pos = taskListMapper.findByBoard(vo.boardId).let {
-            return@let if (it.isNotEmpty()) it.last().position + POSITION_INTERFACE else POSITION_INTERFACE
-        }
+        val pos = taskListMapper.findByBoard(vo.boardId)
+            .let {
+                return@let if (it.isNotEmpty()) it.last().position + POSITION_INTERFACE else POSITION_INTERFACE
+            }
 
         val listId = TaskListInsertQuery(
             boardId = vo.boardId,
@@ -95,7 +96,7 @@ class TaskListServiceImpl(
             ?: throw BadArgumentException("Task list with ID $listId does not exist")
         validateModification(account, boardId)
 
-        val lists = taskListMapper.findByBoard(boardId).sortedBy { it.position }
+        val lists = taskListMapper.findByBoard(boardId)
         if (afterListId != null && afterListId == listId)
             throw BadArgumentException("Cannot move task list to itself")
 

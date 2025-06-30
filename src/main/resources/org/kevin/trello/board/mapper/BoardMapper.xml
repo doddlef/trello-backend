@@ -8,11 +8,11 @@
         <id property="boardId" column="board_id"/>
         <result property="name" column="name"/>
         <result property="ownerUid" column="owner_uid"/>
-        <result property="visibility" column="visibility"/>
-        <result property="deletedFlag"
-                column="deleted_flag"
+        <result property="visibility"
+                column="visibility"
                 typeHandler="org.kevin.trello.board.mapper.typeHandler.BoardVisibilityTypeHandler"
         />
+        <result property="deletedFlag" column="deleted_flag"/>
     </resultMap>
 
     <sql id="BoardColumns">
