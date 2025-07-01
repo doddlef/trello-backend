@@ -31,7 +31,13 @@ interface TaskService {
      */
     fun updateTask(vo: TaskUpdateVO): ApiResponse
 
-    // archive task
+    /**
+     * Archive a task.
+     *
+     * @param taskId the ID of the task to be archived.
+     * @param account the account performing the operation.
+     * @return ApiResponse indicating the result of the operation.
+     */
     fun archiveTask(taskId: String, account: Account): ApiResponse
 
     // insert sub-task

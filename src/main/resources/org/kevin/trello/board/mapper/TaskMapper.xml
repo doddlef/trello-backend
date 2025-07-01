@@ -35,6 +35,12 @@
             <if test="listId != null">
                 AND list_id = #{listId}
             </if>
+            <if test="listIds != null and listIds.size() > 0">
+                AND list_id IN
+                <foreach item="id" collection="listIds" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
             <if test="isFinished != null">
                 AND finished = #{isFinished}
             </if>

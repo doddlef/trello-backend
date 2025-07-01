@@ -27,6 +27,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.restdocs.payload.PayloadDocumentation.*
 import org.springframework.restdocs.cookies.CookieDocumentation.*
+import org.springframework.restdocs.request.RequestDocumentation.*
 import org.springframework.transaction.annotation.Transactional
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -47,7 +48,7 @@ class BoardTests @Autowired constructor(
     private val nickname = "${RandomString(4).nextString()}-user"
     private val password = "Password123!"
 
-    private lateinit var accountUid: String;
+    private lateinit var accountUid: String
     private var accessCookie: Cookie? = null
     private var refreshCookie: Cookie? = null
 
@@ -274,5 +275,132 @@ class BoardTests @Autowired constructor(
                     assertEquals(false, boardView.isFavorite, "Board should be unmarked after disliking")
                 } ?: throw IllegalStateException("Board not found after liking")
         }
+    }
+
+    @Test
+    fun `read board content`() {
+        val boardName = "test board"
+        val boardId = """
+            {
+                "name": "$boardName",
+                "visibility": "PRIVATE"
+            }
+        """.trimIndent()
+            .let {
+                mockMvc.perform(
+                    post("/api/v1/board")
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(it)
+                )
+                    .andExpect(status().isOk)
+                    .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+                    .andReturn()
+                    .response
+                    .contentAsString
+                    .let {
+                        val str = jacksonObjectMapper()
+                            .readTree(it)
+                            .path("data")
+                            .path("board")
+                            .path("boardId")
+                            .asText()
+                        assertNotNull(str, "Board ID should not be null after creation")
+                        str
+                    }
+            }
+
+        """
+            {
+                "name": "1",
+                "boardId": "$boardId"
+            }
+        """.trimIndent()
+            .let {
+                mockMvc.perform(
+                    post("/api/v1/tasklist")
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(it)
+                )
+                    .andExpect(status().isOk)
+                    .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+                    .andReturn()
+                    .response
+                    .contentAsString
+                    .let {
+                        val str = jacksonObjectMapper()
+                            .readTree(it)
+                            .path("data")
+                            .path("listId")
+                            .asText()
+                        assertNotNull(str, "List ID should not be null after creation")
+                        str
+                    }
+            }
+            .let {
+                for (i in 1..5) {
+                    """
+                        {
+                            "title": "Task $i",
+                            "listId": "$it"
+                        }
+                    """.trimIndent()
+                        .let {
+                            mockMvc.perform(
+                                post("/api/v1/task")
+                                    .cookie(accessCookie)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(it)
+                            )
+                                .andExpect(status().isOk)
+                                .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+                                .andExpect(jsonPath("$.data.task").exists())
+                        }
+                }
+            }
+
+        mockMvc.perform(
+            get("/api/v1/board/{boardId}", boardId)
+                .cookie(accessCookie)
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+            .andExpect(jsonPath("$.data.content").exists())
+            .andExpect(jsonPath("$.data.content.id").value(boardId))
+            .andDo(
+                document(
+                    "read-board-content",
+                    requestCookies(
+                        cookieWithName(authProperties.accessCookieName).description("access token cookie")
+                    ),
+                    pathParameters(
+                        parameterWithName("boardId").description("The unique identifier of the board to read")
+                    ),
+                    responseFields(
+                        fieldWithPath("code").description("Response code"),
+                        fieldWithPath("data.content").description("Board contents"),
+                        fieldWithPath("data.content.id").description("Board unique identifier"),
+                        fieldWithPath("data.content.uid").description("user ID"),
+                        fieldWithPath("data.content.name").description("Name of the board"),
+                        fieldWithPath("data.content.visibility").description("Visibility of the board"),
+                        fieldWithPath("data.content.readOnly").description("Whether the board is read-only"),
+                        fieldWithPath("data.content.isFavorite").description("Whether the board is marked as favorite"),
+                        fieldWithPath("data.content.lists").optional().description("List of task lists in the board"),
+                        fieldWithPath("data.content.lists[].id").description("Task list unique identifier"),
+                        fieldWithPath("data.content.lists[].boardId").description("Board ID for the list"),
+                        fieldWithPath("data.content.lists[].name").description("Name of the task list"),
+                        fieldWithPath("data.content.lists[].position").description("Position of the task list"),
+                        fieldWithPath("data.content.lists[].tasks").optional().description("Tasks in the list"),
+                        fieldWithPath("data.content.lists[].tasks[].id").description("Task unique identifier"),
+                        fieldWithPath("data.content.lists[].tasks[].listId").description("List ID for the task"),
+                        fieldWithPath("data.content.lists[].tasks[].finished").description("Whether the task is finished"),
+                        fieldWithPath("data.content.lists[].tasks[].position").description("Position of the task"),
+                        fieldWithPath("data.content.lists[].tasks[].title").description("Title of the task"),
+                        fieldWithPath("data.content.lists[].tasks[].description").description("Description of the task"),
+                        fieldWithPath("data.content.lists[].tasks[].date").description("Date of the task"),
+                    )
+                )
+            )
     }
 }

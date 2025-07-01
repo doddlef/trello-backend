@@ -7,6 +7,12 @@ data class TaskSearchQuery(
     val listId: String? = null,
 
     /**
+     * Unique identifiers for the task lists where the tasks belong.
+     * If provided and listId not provided, it will search for tasks in all specified lists.
+     */
+    val listIds: Collection<String>? = null,
+
+    /**
      * null: all tasks, true: finished tasks, false: unfinished tasks
      */
     val isFinished: Boolean? = null,

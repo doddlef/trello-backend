@@ -69,7 +69,7 @@
             archived = FALSE
         </where>
         <choose>
-            <when test="orderBy == 'NAME">
+            <when test="orderBy == 'NAME'">
                 ORDER BY name ASC
             </when>
             <when test="orderBy == 'NAME_DESC'">

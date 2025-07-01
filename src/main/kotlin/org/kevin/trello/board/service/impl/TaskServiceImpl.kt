@@ -46,7 +46,7 @@ class TaskServiceImpl(
         val (boardView, taskList, _) = pathHelper.pathOfList(listId, account.uid)
 
         if (taskList == null || taskList.archived) {
-            throw BadArgumentException("List with ID ${listId} does not exist")
+            throw BadArgumentException("List with ID $listId does not exist")
         }
         if (boardView == null || boardView.readOnly) {
             throw BadArgumentException("Board with ID ${taskList.boardId} does not exist, or you do not have permission to access it")
@@ -90,7 +90,7 @@ class TaskServiceImpl(
     private fun validateMoveTarget(taskId: String, uid: String) {
         val (boardView, _, task) = pathHelper.pathOfTask(taskId, uid)
         if (task == null || task.archived) {
-            throw BadArgumentException("Task with ID ${taskId} does not exist")
+            throw BadArgumentException("Task with ID $taskId does not exist")
         }
         if (boardView == null || boardView.readOnly) {
             throw BadArgumentException("board not exist, or you do not have permission to access it")
@@ -100,7 +100,7 @@ class TaskServiceImpl(
     private fun validateMoveDestination(listId: String, uid: String) {
         val (boardView, taskList, _) = pathHelper.pathOfList(listId, uid)
         if (taskList == null || taskList.archived) {
-            throw BadArgumentException("List with ID ${listId} does not exist")
+            throw BadArgumentException("List with ID $listId does not exist")
         }
         if (boardView == null || boardView.readOnly) {
             throw BadArgumentException("Board with ID ${taskList.boardId} does not exist, or you do not have permission to access it")
@@ -126,15 +126,25 @@ class TaskServiceImpl(
 
         val prevPos = if (afterIdx >= 0) tasks[afterIdx].position else 0.0
         val nextPos = if (beforeIdx < tasks.size) tasks[beforeIdx].position else prevPos + POSITION_INTERVAL
-        val newPos = (prevPos + nextPos) / 2
+        var newPos = (prevPos + nextPos) / 2
 
         if (newPos - prevPos <= 1) {
-            TODO("Handle case where new position is too close to previous position")
+            tasks.forEachIndexed { idx, t ->
+                val pos = (idx + 1) * POSITION_INTERVAL
+                if (t.position != pos) {
+                    TaskUpdateQuery(
+                        taskId = t.taskId,
+                        position = pos
+                    ).let { taskMapper.updateByTaskId(it) }
+                }
+                if (t.taskId == taskId) newPos = pos
+            }
         }
 
         return newPos + 0.0
     }
 
+    @Transactional
     override fun moveTask(vo: TaskMoveVO): ApiResponse {
         // validate the vo and authority
         validateMoveVO(vo)
@@ -174,11 +184,12 @@ class TaskServiceImpl(
         if (!changed) throw BadArgumentException("No change to update")
 
         val (boardView, _, task) = pathHelper.pathOfTask(taskId, account.uid)
-        if (task == null) throw BadArgumentException("Task with ID ${taskId} does not exist")
+        if (task == null) throw BadArgumentException("Task with ID $taskId does not exist")
         if (boardView == null || boardView.readOnly)
             throw BadArgumentException("you do not have permission to access the board")
     }
 
+    @Transactional
     override fun updateTask(vo: TaskUpdateVO): ApiResponse {
         validateUpdateVO(vo)
 
@@ -196,12 +207,13 @@ class TaskServiceImpl(
         }
     }
 
+    @Transactional
     override fun archiveTask(
         taskId: String,
         account: Account
     ): ApiResponse {
-        val (boardView, taskList, task) = pathHelper.pathOfTask(taskId, account.uid)
-        if (task == null) throw BadArgumentException("Task with ID ${taskId} does not exist")
+        val (boardView, _, task) = pathHelper.pathOfTask(taskId, account.uid)
+        if (task == null) throw BadArgumentException("Task with ID $taskId does not exist")
         if (boardView == null || boardView.readOnly)
             throw BadArgumentException("you do not have permission to access the board")
 

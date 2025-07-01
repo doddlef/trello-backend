@@ -1,10 +1,10 @@
 package org.kevin.trello.board.controller
 
-import jakarta.websocket.server.PathParam
 import org.kevin.trello.auth.utils.SecurityUtils
 import org.kevin.trello.board.controller.request.CreateBoardRequest
 import org.kevin.trello.board.model.BoardVisibility
 import org.kevin.trello.board.service.BoardService
+import org.kevin.trello.board.service.ReadService
 import org.kevin.trello.board.service.vo.BoardCreateVO
 import org.kevin.trello.board.service.vo.BoardSearchVO
 import org.kevin.trello.board.service.vo.BoardSelectVO
@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/board")
 class BoardController(
     private val boardService: BoardService,
+    private val readService: ReadService,
 ) {
     @PostMapping
     fun createNewBoard(@RequestBody request: CreateBoardRequest): ApiResponse {
@@ -84,5 +85,11 @@ class BoardController(
         ).let {
             return boardService.dislikeBoard(it)
         }
+    }
+
+    @GetMapping("/{boardId}")
+    fun content(@PathVariable("boardId") boardId: String): ApiResponse {
+        val account = SecurityUtils.currentAccountOrThrow()
+        return readService.readBoardContent(boardId, account)
     }
 }
