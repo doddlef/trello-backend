@@ -1,5 +1,6 @@
 package org.kevin.trello.board.service
 
+import org.kevin.trello.account.model.Account
 import org.kevin.trello.board.service.vo.TaskCreateVO
 import org.kevin.trello.board.service.vo.TaskMoveVO
 import org.kevin.trello.board.service.vo.TaskUpdateVO
@@ -29,6 +30,9 @@ interface TaskService {
      * @return ApiResponse indicating the result of the operation.
      */
     fun updateTask(vo: TaskUpdateVO): ApiResponse
+
+    // archive task
+    fun archiveTask(taskId: String, account: Account): ApiResponse
 
     // insert sub-task
 

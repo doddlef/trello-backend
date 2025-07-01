@@ -1,5 +1,6 @@
 package org.kevin.trello.board.controller
 
+import org.kevin.trello.account.model.Account
 import org.kevin.trello.auth.utils.SecurityUtils
 import org.kevin.trello.board.controller.request.CreateTaskRequest
 import org.kevin.trello.board.controller.request.EditTaskRequest
@@ -9,6 +10,8 @@ import org.kevin.trello.board.service.vo.TaskCreateVO
 import org.kevin.trello.board.service.vo.TaskMoveVO
 import org.kevin.trello.board.service.vo.TaskUpdateVO
 import org.kevin.trello.core.response.ApiResponse
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -62,5 +65,11 @@ class TaskController(
         ).let {
             return taskService.updateTask(it)
         }
+    }
+
+    @DeleteMapping("/task/{taskId}")
+    fun archiveTask(@PathVariable("taskId") taskId: String): ApiResponse {
+        val account = SecurityUtils.currentAccountOrThrow()
+        return taskService.archiveTask(taskId, account)
     }
 }

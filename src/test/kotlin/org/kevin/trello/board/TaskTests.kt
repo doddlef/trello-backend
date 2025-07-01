@@ -25,10 +25,12 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.restdocs.payload.PayloadDocumentation.*
+import org.springframework.restdocs.request.RequestDocumentation.*
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.transaction.annotation.Transactional
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -483,6 +485,64 @@ class TaskTests @Autowired constructor(
             assertEquals(title, it.title, "Task title should be updated")
             assertEquals(description, it.description, "Task description should be updated")
             assertEquals(date, it.date.toString(), "Task date should be updated")
+        }
+    }
+
+    @Test
+    fun `archive task`() {
+        val taskTitle = "Task to Edit"
+        val taskRequestBody = """
+            {
+                "title": "$taskTitle",
+                "listId": "$listId"
+            }
+        """.trimIndent()
+
+        val taskId = mockMvc.perform(
+            post("/api/v1/task")
+                .cookie(accessCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(taskRequestBody)
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+            .andExpect(jsonPath("$.data.task").exists())
+            .andExpect(jsonPath("$.data.task.title").value(taskTitle))
+            .andExpect(jsonPath("$.data.task.listId").value(listId))
+            .andReturn()
+            .response
+            .contentAsString
+            .let {
+                val str = jacksonObjectMapper()
+                    .readTree(it)
+                    .path("data")
+                    .path("task")
+                    .path("taskId")
+                    .asText()
+                str
+            }
+
+        mockMvc.perform(
+            delete("/api/v1/task/{taskId}", taskId)
+                .cookie(accessCookie!!)
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+            .andDo(
+                document(
+                    "archive-task",
+                    pathParameters(
+                        parameterWithName("taskId").description("ID of the task to be archived")
+                    ),
+                    responseFields(
+                        fieldWithPath("code").description("Response code indicating success or failure"),
+                        fieldWithPath("message").optional().description("A message describing the result of the operation"),
+                    )
+                )
+            )
+
+        taskMapper.findByTaskId(taskId).let {
+            assertNull(it, "Task should not exist after archiving")
         }
     }
 }

@@ -1,5 +1,6 @@
 package org.kevin.trello.board.service.impl
 
+import org.kevin.trello.account.model.Account
 import org.kevin.trello.board.mapper.TaskMapper
 import org.kevin.trello.board.mapper.query.TaskInsertQuery
 import org.kevin.trello.board.mapper.query.TaskSearchQuery
@@ -191,6 +192,27 @@ class TaskServiceImpl(
 
             return ApiResponse.success()
                 .message("Task updated successfully")
+                .build()
+        }
+    }
+
+    override fun archiveTask(
+        taskId: String,
+        account: Account
+    ): ApiResponse {
+        val (boardView, taskList, task) = pathHelper.pathOfTask(taskId, account.uid)
+        if (task == null) throw BadArgumentException("Task with ID ${taskId} does not exist")
+        if (boardView == null || boardView.readOnly)
+            throw BadArgumentException("you do not have permission to access the board")
+
+        TaskUpdateQuery(
+            taskId = taskId,
+            archived = true,
+        ).let {
+            taskMapper.updateByTaskId(it)
+
+            return ApiResponse.success()
+                .message("Task archived successfully")
                 .build()
         }
     }
