@@ -404,4 +404,85 @@ class TaskTests @Autowired constructor(
             assertEquals(taskBId, tasks[0].taskId, "The only task in the first list should be Task B")
         }
     }
+
+    @Test
+    @DisplayName("edit task")
+    fun `edit task`() {
+        val taskTitle = "Task to Edit"
+        val taskRequestBody = """
+            {
+                "title": "$taskTitle",
+                "listId": "$listId"
+            }
+        """.trimIndent()
+
+        val taskId = mockMvc.perform(
+            post("/api/v1/task")
+                .cookie(accessCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(taskRequestBody)
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+            .andExpect(jsonPath("$.data.task").exists())
+            .andExpect(jsonPath("$.data.task.title").value(taskTitle))
+            .andExpect(jsonPath("$.data.task.listId").value(listId))
+            .andReturn()
+            .response
+            .contentAsString
+            .let {
+                val str = jacksonObjectMapper()
+                    .readTree(it)
+                    .path("data")
+                    .path("task")
+                    .path("taskId")
+                    .asText()
+                str
+            }
+
+        val title = "Updated Task Title"
+        val description = "This is an updated description."
+        val date = "2023-10-01"
+
+        """
+            {
+                "taskId": "$taskId",
+                "title": "$title",
+                "description": "$description",
+                "date": "$date"
+            }
+        """.trimIndent()
+            .let {
+                mockMvc.perform(
+                    put("/api/v1/task/edit")
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(it)
+                )
+                    .andExpect(status().isOk)
+                    .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS.code))
+                    .andDo(
+                        document(
+                            "edit-task",
+                            requestFields(
+                                fieldWithPath("taskId").description("ID of the task to be edited"),
+                                fieldWithPath("title").optional().description("New title for the task"),
+                                fieldWithPath("description").optional().description("New description for the task"),
+                                fieldWithPath("date").optional().description("New due date for the task, in YYYY-MM-DD format")
+                            ),
+                            responseFields(
+                                fieldWithPath("code").description("Response code indicating success or failure"),
+                                fieldWithPath("message").optional().description("A message describing the result of the operation"),
+                            )
+                        )
+                )
+            }
+
+        taskMapper.findByTaskId(taskId).let {
+            assertNotNull(it, "Task should exist after editing")
+            assertEquals(title, it.title, "Task title should be updated")
+            assertEquals(description, it.description, "Task description should be updated")
+            assertEquals(date, it.date.toString(), "Task date should be updated")
+        }
+    }
 }

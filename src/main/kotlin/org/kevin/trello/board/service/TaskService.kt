@@ -2,6 +2,7 @@ package org.kevin.trello.board.service
 
 import org.kevin.trello.board.service.vo.TaskCreateVO
 import org.kevin.trello.board.service.vo.TaskMoveVO
+import org.kevin.trello.board.service.vo.TaskUpdateVO
 import org.kevin.trello.core.response.ApiResponse
 
 interface TaskService {
@@ -21,11 +22,15 @@ interface TaskService {
      */
     fun moveTask(vo: TaskMoveVO): ApiResponse
 
-    // update title
+    /**
+     * Update an existing task.
+     *
+     * @param vo the value object containing task update details.
+     * @return ApiResponse indicating the result of the operation.
+     */
+    fun updateTask(vo: TaskUpdateVO): ApiResponse
 
-    // update description
-
-    // update date
+    // insert sub-task
 
     // insert label
 

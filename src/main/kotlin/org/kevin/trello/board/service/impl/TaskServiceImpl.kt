@@ -8,6 +8,7 @@ import org.kevin.trello.board.repo.PathHelper
 import org.kevin.trello.board.service.TaskService
 import org.kevin.trello.board.service.vo.TaskCreateVO
 import org.kevin.trello.board.service.vo.TaskMoveVO
+import org.kevin.trello.board.service.vo.TaskUpdateVO
 import org.kevin.trello.core.exception.BadArgumentException
 import org.kevin.trello.core.exception.TrelloException
 import org.kevin.trello.core.response.ApiResponse
@@ -21,18 +22,30 @@ class TaskServiceImpl(
     private val pathHelper: PathHelper,
     private val taskMapper: TaskMapper,
 ): TaskService {
+    private fun validateTitle(title: String) {
+        if (title.isBlank()) throw BadArgumentException("Title should not be blank")
+        if (title.length > 128) throw BadArgumentException("Title should not exceed 128 characters")
+    }
+
+    private fun validateDescription(description: String) {
+        if (description.length > 1024) {
+            throw BadArgumentException("Description should not exceed 1024 characters")
+        }
+    }
+
     /**
      * check the validity of the TaskCreateVO.
      */
     private fun validateCreateVO(vo: TaskCreateVO) {
-        if (vo.title.isBlank()) throw BadArgumentException("Title should not be blank")
-        if (vo.title.length > 128) throw BadArgumentException("Title should not exceed 128 characters")
-        if (vo.listId.isBlank()) throw BadArgumentException("List ID should not be blank")
+        val (title, account, listId ) = vo
 
-        val (boardView, taskList, _) = pathHelper.pathOfList(vo.listId, vo.account.uid)
+        validateTitle(title)
+        if (listId.isBlank()) throw BadArgumentException("List ID should not be blank")
+
+        val (boardView, taskList, _) = pathHelper.pathOfList(listId, account.uid)
 
         if (taskList == null || taskList.archived) {
-            throw BadArgumentException("List with ID ${vo.listId} does not exist")
+            throw BadArgumentException("List with ID ${listId} does not exist")
         }
         if (boardView == null || boardView.readOnly) {
             throw BadArgumentException("Board with ID ${taskList.boardId} does not exist, or you do not have permission to access it")
@@ -141,5 +154,44 @@ class TaskServiceImpl(
             .message("Task moved successfully")
             .add("newPosition" to newPosition)
             .build()
+    }
+
+    private fun validateUpdateVO(vo: TaskUpdateVO) {
+        val (taskId, title, description, date, account) = vo
+        if (taskId.isBlank()) throw BadArgumentException("Task ID should not be blank")
+
+        var changed = false
+        if (title != null) {
+            validateTitle(title)
+            changed = true
+        }
+        if (description != null) {
+            validateDescription(description)
+            changed = true
+        }
+        if (date != null) changed = true
+        if (!changed) throw BadArgumentException("No change to update")
+
+        val (boardView, _, task) = pathHelper.pathOfTask(taskId, account.uid)
+        if (task == null) throw BadArgumentException("Task with ID ${taskId} does not exist")
+        if (boardView == null || boardView.readOnly)
+            throw BadArgumentException("you do not have permission to access the board")
+    }
+
+    override fun updateTask(vo: TaskUpdateVO): ApiResponse {
+        validateUpdateVO(vo)
+
+        TaskUpdateQuery(
+            taskId = vo.taskId,
+            title = vo.title,
+            description = vo.description,
+            date = vo.date,
+        ).let {
+            taskMapper.updateByTaskId(it)
+
+            return ApiResponse.success()
+                .message("Task updated successfully")
+                .build()
+        }
     }
 }
