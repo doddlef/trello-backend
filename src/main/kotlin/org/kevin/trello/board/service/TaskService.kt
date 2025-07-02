@@ -32,6 +32,15 @@ interface TaskService {
     fun updateTask(vo: TaskUpdateVO): ApiResponse
 
     /**
+     * Finish a task.
+     *
+     * @param taskId the ID of the task to be finished.
+     * @param account the account performing the operation.
+     * @return ApiResponse indicating the result of the operation.
+     */
+    fun finishTask(taskId: String, account: Account): ApiResponse
+
+    /**
      * Archive a task.
      *
      * @param taskId the ID of the task to be archived.

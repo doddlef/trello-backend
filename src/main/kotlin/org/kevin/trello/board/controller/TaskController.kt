@@ -1,6 +1,5 @@
 package org.kevin.trello.board.controller
 
-import org.kevin.trello.account.model.Account
 import org.kevin.trello.auth.utils.SecurityUtils
 import org.kevin.trello.board.controller.request.CreateTaskRequest
 import org.kevin.trello.board.controller.request.EditTaskRequest
@@ -65,6 +64,12 @@ class TaskController(
         ).let {
             return taskService.updateTask(it)
         }
+    }
+
+    @PutMapping("/task/{taskId}/finish")
+    fun finishTask(@PathVariable("taskId") taskId: String): ApiResponse {
+        val account = SecurityUtils.currentAccountOrThrow()
+        return taskService.finishTask(taskId, account)
     }
 
     @DeleteMapping("/task/{taskId}")

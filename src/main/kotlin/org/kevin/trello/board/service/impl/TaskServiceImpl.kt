@@ -207,6 +207,28 @@ class TaskServiceImpl(
         }
     }
 
+    override fun finishTask(
+        taskId: String,
+        account: Account
+    ): ApiResponse {
+        val (boardView, _, task) = pathHelper.pathOfTask(taskId, account.uid)
+        if (task == null) throw BadArgumentException("Task with ID $taskId does not exist")
+        if (task.finished) throw BadArgumentException("Task with ID $taskId is already finished")
+        if (boardView == null || boardView.readOnly)
+            throw BadArgumentException("you do not have permission to access the board")
+
+        TaskUpdateQuery(
+            taskId = taskId,
+            finished = true,
+        ).let {
+            taskMapper.updateByTaskId(it)
+
+            return ApiResponse.success()
+                .message("Task finished successfully")
+                .build()
+        }
+    }
+
     @Transactional
     override fun archiveTask(
         taskId: String,

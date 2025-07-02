@@ -489,6 +489,61 @@ class TaskTests @Autowired constructor(
     }
 
     @Test
+    fun `finish task`() {
+        val taskId = """
+            {
+                "title": "Task to Finish",
+                "listId": "$listId"
+            }
+        """.trimIndent()
+            .let {
+                mockMvc.perform(
+                    post("/api/v1/task")
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(it)
+                )
+                    .andExpect(status().isOk)
+                    .andReturn()
+                    .response
+                    .contentAsString
+                    .let {
+                        val str = jacksonObjectMapper()
+                            .readTree(it)
+                            .path("data")
+                            .path("task")
+                            .path("taskId")
+                            .asText()
+                        str
+                    }
+
+            }
+
+        mockMvc.perform(
+            put("/api/v1/task/{taskId}/finish", taskId)
+                .cookie(accessCookie)
+        )
+            .andExpect(status().isOk)
+            .andDo(
+                document(
+                    "finish-task",
+                    pathParameters(
+                        parameterWithName("taskId").description("ID of the task to be finished")
+                    ),
+                    responseFields(
+                        fieldWithPath("code").description("Response code indicating success or failure"),
+                        fieldWithPath("message").optional().description("A message describing the result of the operation"),)
+                )
+            )
+
+        taskMapper.findByTaskId(taskId).let {
+            assertNotNull(it, "Task should exist after finishing")
+            assertEquals(true, it.finished, "Task should be marked as finished")
+            assertEquals(false, it.archived, "Task should not be archived after finishing")
+        }
+    }
+
+    @Test
     fun `archive task`() {
         val taskTitle = "Task to Edit"
         val taskRequestBody = """
